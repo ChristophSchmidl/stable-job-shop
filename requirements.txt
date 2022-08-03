@@ -1,0 +1,4 @@
+gym
+gym[box2d]
+stable-baselines3
+swig
