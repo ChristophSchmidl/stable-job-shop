@@ -1,4 +1,7 @@
-gym
-gym[box2d]
 stable-baselines3
 swig
+gym
+gym[box2d]
+tensorboard
+opencv-python
+JSSEnv

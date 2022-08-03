@@ -16,9 +16,9 @@ Reinforcement Learning applied to permutation job shop problems
 ## Tutorials for stable-baselines3
 
 - [x] [Reinforcement Learning with Stable Baselines 3 - Introduction (P.1)](https://youtu.be/XbWhJdQgi7E)
-- [ ] [Saving and Loading Models - Stable Baselines 3 Tutorial (P.2)](https://youtu.be/dLP-2Y6yu70)
-- [ ] [Custom Environments - Reinforcement Learning with Stable Baselines 3 (P.3)](https://youtu.be/uKnjGn8fF70)
-- [ ] [Tweaking Custom Environment Rewards - Reinforcement Learning with Stable Baselines 3 (P.4)](https://youtu.be/yvwxbkKX9dc)
+- [x] [Saving and Loading Models - Stable Baselines 3 Tutorial (P.2)](https://youtu.be/dLP-2Y6yu70)
+- [x] [Custom Environments - Reinforcement Learning with Stable Baselines 3 (P.3)](https://youtu.be/uKnjGn8fF70)
+- [x] [Tweaking Custom Environment Rewards - Reinforcement Learning with Stable Baselines 3 (P.4)](https://youtu.be/yvwxbkKX9dc)
 
 ## Possible extensions
 

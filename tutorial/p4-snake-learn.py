@@ -1,8 +1,12 @@
 import gym
 from stable_baselines3 import PPO
 import os
+import time
+from snakeenv import SnakeEnv
 
-models_dir = "models/PPO"
+
+
+models_dir = f"models/PPO-{int(time.time())}"
 log_dir = f"logs/PPO-{int(time.time())}"
 
 if not os.path.exists(models_dir):
@@ -12,7 +16,7 @@ if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
 # Create the environment
-env = gym.make("LunarLander-v2") # Continuous control task
+env = SnakeEnv()
 
 # required before you can step through the environment
 env.reset()
