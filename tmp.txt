@@ -1,0 +1,12 @@
+************************************
+            Plotting
+************************************
+
+- https://stackabuse.com/seaborn-line-plot-tutorial-and-examples/
+- https://stable-baselines.readthedocs.io/en/master/guide/rl_tips.html
+- https://stable-baselines.readthedocs.io/en/master/guide/examples.html
+- https://stable-baselines.readthedocs.io/en/master/guide/callbacks.html#callbacks
+- Deep Reinforcement Learning that Matters: https://arxiv.org/pdf/1709.06560.pdf
+- https://github.com/hill-a/stable-baselines/blob/master/stable_baselines/bench/monitor.py#L13
+- https://github.com/araffin/rl-tutorial-jnrr19
+- https://neurogym.github.io/example_neurogym_rl.html

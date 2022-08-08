@@ -5,3 +5,4 @@ gym[box2d]
 tensorboard
 opencv-python
 JSSEnv
+seaborn
