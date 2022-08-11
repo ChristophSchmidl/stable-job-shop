@@ -68,13 +68,13 @@ for episode in range(EPISODES):
     #print(f"Make-span: {env.last_time_step}")
     episode_rewards.append(cum_episode_reward)
     episode_makespans.append(env.last_time_step)
-    average_episode_rewards
+    #average_episode_rewards
 
 
 print(f"Episode rewards: {episode_rewards}")
-print(f"Episode average rewards: {}")
+#print(f"Episode average rewards: {average_episode_rewards}")
 print(f"Episode make-spans: {episode_makespans}")
 
-data_plot = pd.DataFrame({"Number of Episodes": np.arange(1, len(episode_rewards)+1), "Episode reward":episode_rewards})
+data_plot = pd.DataFrame({"Episode": np.arange(1, len(episode_rewards)+1), "Episode reward":episode_rewards})
 sns.lineplot(x = "Episode", y = "Episode reward", data = data_plot)
 plt.show()
