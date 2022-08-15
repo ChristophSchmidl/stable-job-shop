@@ -28,10 +28,6 @@ class StopTrainingOnMaxEpisodes(BaseCallback):
         self.logger.record("time/total_max_episodes", int(self._total_max_episodes))
         self.logger.record("time/n_episodes", int(self.n_episodes))
         
-        for key, value in self.locals.items() :
-            print(key)
-        exit()
-
         # Check that the `dones` local variable is defined
         assert "dones" in self.locals, "`dones` variable is not defined, please check your code next to `callback.on_step()`"
         self.n_episodes += np.sum(self.locals["dones"]).item()

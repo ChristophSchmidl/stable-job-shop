@@ -11,8 +11,55 @@
 - https://github.com/hill-a/stable-baselines/blob/master/stable_baselines/bench/monitor.py#L13
 - https://github.com/araffin/rl-tutorial-jnrr19
 - https://neurogym.github.io/example_neurogym_rl.html
+- https://chowdera.com/2022/04/202204130435468291.html
+- https://chowdera.com/2022/03/202203271932500916.html
 
 ************************************
             Logging
 ************************************
-https://www.youtube.com/watch?v=w8QHoVam1-I&ab_channel=Jayanam
+- https://www.youtube.com/watch?v=w8QHoVam1-I&ab_channel=Jayanam
+- https://stackoverflow.com/questions/69181347/stable-baselines3-log-rewards
+- https://stable-baselines3.readthedocs.io/en/master/common/logger.html
+- https://www.reddit.com/r/reinforcementlearning/comments/ofm0bu/comment/h4dekga/
+- https://github.com/hill-a/stable-baselines/issues/1139
+- https://stable-baselines3.readthedocs.io/en/master/guide/tensorboard.html
+- https://colab.research.google.com/github/Stable-Baselines-Team/rl-colab-notebooks/blob/sb3/monitor_training.ipynb#scrollTo=pUWGZp3i9wyf
+
+************************************
+            Blogs
+************************************
+- https://araffin.github.io/post/rliable/
+- https://openlab-flowers.inria.fr/t/how-many-random-seeds-should-i-use-statistical-power-analysis-in-deep-reinforcement-learning-experiments/457
+
+************************************
+    Callbacks in stable-baselines
+************************************
+
+for key, value in self.locals.items():
+    print(key)
+
+self
+total_timesteps
+callback
+log_interval
+eval_env
+eval_freq
+n_eval_episodes
+tb_log_name
+eval_log_path
+reset_num_timesteps
+use_masking
+iteration
+env
+rollout_buffer
+n_rollout_steps
+n_steps
+action_masks
+obs_tensor
+actions
+values
+log_probs
+new_obs
+rewards
+dones
+infos

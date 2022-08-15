@@ -7,3 +7,4 @@ opencv-python
 JSSEnv
 seaborn
 ipython
+sb3-contrib
