@@ -31,6 +31,23 @@
 - https://araffin.github.io/post/rliable/
 - https://openlab-flowers.inria.fr/t/how-many-random-seeds-should-i-use-statistical-power-analysis-in-deep-reinforcement-learning-experiments/457
 
+
+
+************************************
+            TODO
+************************************
+
+- Finish TensorboardCallback
+    - Plot makespan (per episode)
+    - Plot reward/return (per episode)
+    - Plot average return (per episode, different seeds?)
+
+- Finish ProgressBarCallback
+    - Add a flag for switching between episodes and timesteps
+    - 
+- Question: Is model.learn() resetting the weights of the model each time it gets executed?
+
+
 ************************************
     Callbacks in stable-baselines
 ************************************
