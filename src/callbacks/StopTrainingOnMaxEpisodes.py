@@ -48,3 +48,10 @@ class StopTrainingOnMaxEpisodes(BaseCallback):
             )
 
         return continue_training
+
+    def on_training_end(self) -> None:
+        self._on_training_end()
+
+    def _on_training_end(self) -> None:
+        self._init_callback()
+        self.n_episodes = 0

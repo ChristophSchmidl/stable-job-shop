@@ -7,6 +7,7 @@ from stable_baselines3.common.monitor import Monitor, load_results
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 from src.callbacks.StopTrainingOnMaxEpisodes import StopTrainingOnMaxEpisodes
 from src.callbacks.TensorboardCallback import TensorboardCallback
+from src.wrappers.JobShopMonitor import JobShopMonitor
 from stable_baselines3.common import results_plotter
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.utils import set_random_seed
@@ -118,7 +119,7 @@ def make_jobshop_env(rank=0, seed=0, instance_name="taillard/ta01.txt", monitor_
     env = ActionMasker(env, mask_fn)
     # Info on monitor.csv
     # ep_info = {"r": round(ep_rew, 6), "l": ep_len, "t": round(time.time() - self.t_start, 6)}
-    env = Monitor(env=env, filename=monitor_log_path)
+    env = JobShopMonitor(env=env, filename=monitor_log_path)
     return env
     
 
@@ -139,7 +140,7 @@ new_logger = configure(log_dir, ["stdout", "csv", "tensorboard"])
 #                   Create the environment
 ###############################################################
 
-env = make_jobshop_env(rank=0, seed=1, instance_name="taillard/ta41.txt", monitor_log_path=log_dir + "monitor.csv")
+env = make_jobshop_env(rank=0, seed=1, instance_name="taillard/ta41.txt", monitor_log_path=log_dir)
 # required before you can step through the environment
 env.reset()
 
@@ -148,66 +149,70 @@ env.reset()
 #                   Create the model with callbacks
 ###############################################################
 
-
-# Create Callback
-stopTrainingOnMaxEpisodes_callback = StopTrainingOnMaxEpisodes(max_episodes = 20, verbose=1)
-tensorboard_callback = TensorboardCallback()
-eval_callback = EvalCallback(env, best_model_save_path='models/jss/PPO/best_model',
+def create_model(model_name="MaskablePPO", policy="MlpPolicy", env=None, n_env=1, n_steps=20, n_episodes=20, log_dir=None, verbose=1):
+    if model_name == "MaskablePPO":
+        # Create Callback
+        stopTrainingOnMaxEpisodes_callback = StopTrainingOnMaxEpisodes(max_episodes = n_episodes, verbose=verbose)
+        tensorboard_callback = TensorboardCallback()
+        '''
+        eval_callback = EvalCallback(env, best_model_save_path='models/jss/PPO/best_model',
                              log_path=log_dir, eval_freq=5,
                              deterministic=False, render=False)
-
-
-# Create the callback list
-callback = CallbackList([stopTrainingOnMaxEpisodes_callback, tensorboard_callback])
-
-model = MaskablePPO('MultiInputPolicy', env, verbose=1, tensorboard_log=log_dir)
-#model = PPO("MultiInputPolicy", env, verbose=1, tensorboard_log=log_dir)
-model.set_logger(new_logger)
+        '''
+        # Create the callback list
+        callback = CallbackList([stopTrainingOnMaxEpisodes_callback, tensorboard_callback])
+        model = MaskablePPO('MultiInputPolicy', env, verbose=verbose, tensorboard_log=log_dir)
+        #model = PPO("MultiInputPolicy", env, verbose=1, tensorboard_log=log_dir)
+        return model, callback
 
 
 ###############################################################
 #                         Train the model
 ###############################################################
 
-log_df = pd.DataFrame(columns=['episode', 'timesteps', 'reward'])
+log_df = pd.DataFrame(columns=['episode', 'timesteps', 'time', 'reward', 'makespan', 'model_id'])
 fig = None
 
 TIMESTEPS = np.inf # Dirty hack to make it run forever
 for i in range(0, 3):
-    env = make_jobshop_env(rank=0, seed=i, instance_name="taillard/ta41.txt", monitor_log_path=log_dir + f"episode_{i}")
-    # required before you can step through the environment
-    env.reset()
+    env = make_jobshop_env(rank=0, seed=i, instance_name="taillard/ta41.txt", monitor_log_path=log_dir + f"_PPO_{str(i)}_")
+    model, callback = create_model(
+        model_name="MaskablePPO", 
+        policy="MlpPolicy", 
+        env=env, 
+        n_env=1, 
+        n_steps=20, 
+        n_episodes=100, 
+        log_dir=log_dir, 
+        verbose=1)
 
-    model = MaskablePPO('MultiInputPolicy', env, verbose=1, tensorboard_log=log_dir)
-    #model = PPO("MultiInputPolicy", env, verbose=1, tensorboard_log=log_dir)
-    #model.set_logger(new_logger)
-
-    # Pass reset_num_timesteps=False to continue the training curve in tensorboard
-    # By default, it will create a new curve
-    # If you specify different tb_log_name in subsequent runs, you will have split graphs
-    # See: https://stable-baselines3.readthedocs.io/en/master/guide/tensorboard.html
     model.learn(total_timesteps=TIMESTEPS, reset_num_timesteps=True, tb_log_name="PPO", callback=callback, use_masking=True) # TODO: tb_log_name with timestamp, i.e. PPO-{int(time.time())}
     model.save(os.path.join(models_dir, str(TIMESTEPS * i)))
-    print(f"Last time step: {env.last_time_step}")
 
-    # Grab the monitor.csv file and put it into a pandas dataframe?
-    #df = pd.read_csv(os.path.join(log_dir, 'monitor.csv'))
-    episode, episode_reward = results_plotter.ts2xy(load_results(log_dir), results_plotter.X_EPISODES)
-    makespan = env.last_time_step
+    episode_rewards = env.get_episode_rewards()
+    episode_lengths = env.get_episode_lengths()
+    episode_times = env.get_episode_times()
+    episode_makespans = env.get_episode_makespans()
+
+    log_df = log_df.append(pd.DataFrame({"episode": np.arange(len(episode_rewards)), "timesteps": episode_lengths, "time": episode_times, "reward": episode_rewards, "makespan": episode_makespans, "model_id": i}))
+
+    #print(f"Episode rewards: {env.get_episode_rewards()}")
+    #print(f"Episode makespans: {env.get_episode_makespans()}")
 
 
-    episode_df = pd.DataFrame(zip(episode, episode_reward), columns=['episode', 'reward'])
-    log_df = pd.concat([log_df, episode_df])
-    fig = env.render()
-    print(env.get_episode_rewards())
+    #episodes_df = pd.DataFrame(np.column_stack([]), columns=['episode', 'reward'])
+    #log_df = pd.concat([log_df, episode_df])
+    #fig = env.render()
+    #print(env.get_episode_rewards())
+    
+
 
 env.close()
-
-
+log_df.reset_index(inplace=True, drop=True) 
 log_df.to_csv(log_dir + '/reward_log.csv')
-df = pd.read_csv(log_dir + '/reward_log.csv', index_col=False)
-print(df)
-sns.lineplot(x = "episode", y = "reward", data=df)
+#df = pd.read_csv(log_dir + '/reward_log.csv', index_col=False)
+print(log_df)
+sns.lineplot(x = "episode", y = "reward", data=log_df)
 plt.show()
 
 #fig.show()
