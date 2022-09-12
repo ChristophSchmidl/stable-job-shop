@@ -101,3 +101,21 @@ new_obs
 rewards
 dones
 infos
+
+
+************************************
+        Paper hyperparameters
+************************************
+
+clip_param: 0.5653 -> SB3 PPO: clip_range
+entropy_end: 0.00221
+entropy_start: 0.005503
+kl_coeff: 0.116
+kl_target: 0.08849 -> SB3 PPO: target_kl
+layer_size: 264
+lr_end: 0.00009277 -> SB3 PPO: learning_rate     
+lr_start: 0.0008534
+num_sgd_iter: 12 -> SB3 PPO: n_epochs?
+vf_clip_param: 24 -> SB3 PPO: clip_range_vf
+vf_loss_coeff: 0.9991 -> SB3 PPO: vf_coef
+episode_reward_mean: 179.046

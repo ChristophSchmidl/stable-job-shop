@@ -5,157 +5,126 @@ import pprint
 import numpy as np
 import wandb
 import torch
+from wandb.integration.sb3 import WandbCallback
+
+from src.utils.pytorch_utils import get_device, get_device_name, get_device_count, get_device_memory, enforce_deterministic_behavior
+from src.models.environment import make_jobshop_env
+
+# Make sure we always get the same "random" numbers
+enforce_deterministic_behavior()
+device = get_device()
+
+def make_model(config):
+    pass
 
 
-
-# Ensure deterministic behavior
-torch.backends.cudnn.deterministic = True
-random.seed(hash("setting random seeds") % 2**32 - 1)
-np.random.seed(hash("improves reproducibility") % 2**32 - 1)
-torch.manual_seed(hash("by removing stochasticity") % 2**32 - 1)
-torch.cuda.manual_seed_all(hash("so runs are repeatable") % 2**32 - 1)
-
-# Device configuration
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-
-def train(config=None):
-    # Initialize a new wandb run
-    with wandb.init(config=config):
-        # If called by wandb.agent, as below,
-        # this config will be set by Sweep Controller
+def train():
+    with wandb.init() as run:
         config = wandb.config
 
-        env = build_dataset(config.batch_size)
-        policy = build_network(config.fc_layer_size, config.dropout)
-        optimizer = build_optimizer(network, config.optimizer, config.learning_rate)
+        # Create the environment
+        env = make_jobshop_env(rank=0, seed=1, instance_name="taillard/ta41.txt", monitor_log_path=log_dir)
+        # required before you can step through the environment
+        env.reset()
 
-        for epoch in range(config.epochs):
-            avg_loss = train_epoch(network, loader, optimizer)
-            wandb.log({"loss": avg_loss, "epoch": epoch}) 
-
-
-def build_dataset(batch_size):
-   
-    transform = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize((0.1307,), (0.3081,))])
-    # download MNIST training dataset
-    dataset = datasets.MNIST(".", train=True, download=True,
-                             transform=transform)
-    sub_dataset = torch.utils.data.Subset(
-        dataset, indices=range(0, len(dataset), 5))
-    loader = torch.utils.data.DataLoader(sub_dataset, batch_size=batch_size)
-
-    return loader
-
-
-def build_network(fc_layer_size, dropout):
-    network = nn.Sequential(  # fully-connected, single hidden layer
-        nn.Flatten(),
-        nn.Linear(784, fc_layer_size), nn.ReLU(),
-        nn.Dropout(dropout),
-        nn.Linear(fc_layer_size, 10),
-        nn.LogSoftmax(dim=1))
-
-    return network.to(device)
-        
-
-def build_optimizer(network, optimizer, learning_rate):
-    if optimizer == "sgd":
-        optimizer = optim.SGD(network.parameters(),
-                              lr=learning_rate, momentum=0.9)
-    elif optimizer == "adam":
-        optimizer = optim.Adam(network.parameters(),
-                               lr=learning_rate)
-    return optimizer
-
-
-def train_epoch(network, loader, optimizer):
-    cumu_loss = 0
-    for _, (data, target) in enumerate(loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
-
-        # ➡ Forward pass
-        loss = F.nll_loss(network(data), target)
-        cumu_loss += loss.item()
-
-        # ⬅ Backward pass + weight update
-        loss.backward()
-        optimizer.step()
-
-        wandb.log({"batch loss": loss.item()})
-
-    return cumu_loss / len(loader)
-
-
-def model_pipeline(hyperparameters):
-
-    # Tell wandb to get started
-    with wandb.init(project="jobshop-scheduling", config=hyperparameters):
-        # Access all HPs through wandb.config, so logging matches execution!
-        config = wandb.config
-
-        # Create a new model instance
-        model = MaskablePPO(
-            policy='MultiInputPolicy', 
+        # Create the model with callbacks
+        model, callback = create_model(
+            model_name="MaskablePPO", 
+            policy="MlpPolicy", 
             env=env, 
-            clip_range=config.clip_range,
-            #target_kl=0.08849,
-            #learning_rate=0.0008534,
-            #n_epochs=12,
-            clip_range_vf=config.clip_range_vf,
-            #vf_coef=0.9991,
-            policy_kwargs=policy_kwargs,
-            verbose=verbose, 
-            tensorboard_log=log_dir)
+            n_env=1, 
+            n_steps=20, 
+            n_episodes=25000, 
+            log_dir=log_dir, 
+            verbose=1)
 
-        # Train the model
         model.learn(total_timesteps=TIMESTEPS, reset_num_timesteps=True, tb_log_name="PPO", callback=callback, use_masking=True)
 
+    model.learn(total_timesteps=episodes, reset_num_timesteps=True, tb_log_name="PPO", callback=WandbCallback(), use_masking=True) # TODO: tb_log_name with timestamp, i.e. PPO-{int(time.time())}
+    model.save(os.path.join(wandb.run.dir, "models", str(episodes * i)))
 
-wandb.login()
+    # Get the episode data
+    episode_rewards = env.get_episode_rewards()
+    episode_lengths = env.get_episode_lengths()
+    episode_times = env.get_episode_times()
+    episode_makespans = env.get_episode_makespans()
 
-sweep_config = {
-    'method': 'random'
-    }
-
-metric = {
-    'name': 'loss',
-    'goal': 'minimize'   
-    }
-
-sweep_config['metric'] = metric
-
-
-parameters_dict = {
-    'optimizer': {
-        'values': ['adam', 'sgd']
-        },
-    'fc_layer_size': {
-        'values': [128, 256, 512]
-        },
-    'dropout': {
-          'values': [0.3, 0.4, 0.5]
-        },
-    }
-
-sweep_config['parameters'] = parameters_dict
-
-parameters_dict.update({
-    'epochs': {
-        'value': 1}
+    # Log the episode data
+    wandb.log({
+        "episode_rewards": episode_rewards,
+        "episode_lengths": episode_lengths,
+        "episode_times": episode_times,
+        "episode_makespans": episode_makespans
     })
 
+    # Log the model
+    wandb.save(os.path.join(wandb.run.dir, "models", str(episodes * i)))
+
+    # Log the environment
+    wandb.save(os.path.join(wandb.run.dir, "env", str(episodes * i)))
 
 
-pprint.pprint(sweep_config)
+'''
+layer_size: 264
+num_sgd_iter: 12 -> SB3 PPO: n_epochs?
+episode_reward_mean: 179.046
+'''
 
-# Create a new sweep controller
-sweep_id = wandb.sweep(sweep_config, project="pytorch-sweeps-demo")
 
-print(sweep_id)
-exit()
+sweep_config = {
+    "name": "jss-ppo-sweep",
+    "method": "random",
+    "metric": {
+        "name": "episode_rewards",
+        "goal": "maximize"
+    },
+    "parameters": {
+        "learning_rate": {
+            "values": [0.0008, 0.00009]
+        },
+        "clip_range": {
+            "values": [0.1, 0.6]
+        },
+        "clip_range_vf": {
+            "values": [0.1, 24]
+        },
+        "gamma": {
+            "values": [0.99, 0.999]
+        },
+        "vf_coef": {
+            "values": [0.5, 0.9999]
+        },
+        "ent_coef": {
+            "values": [0.002, 0.006]
+        },
+        "target_kl": {
+            "values": [0.088, 0.116]
+        },
+        "optimizer": {
+            "values": ["adam", "sgd"]
+        },
+    }
+}
 
-wandb.agent(sweep_id, train, count=5)
+wandb.init(config=sweep_config)
+config = wandb.config
+
+
+
+sweep_id = wandb.sweep(sweep_config)
+wandb.agent(sweep_id, function=train)
+
+
+
+env = make_jobshop_env(rank=0, seed=1, instance_name="taillard/ta41.txt", monitor_log_path=run.dir)
+
+
+policy_kwargs = dict(
+    activation_fn=torch.nn.ReLU,
+    net_arch=[256, 256]
+    lr_schedule=0.00025,
+    optimizer_kwargs=dict(eps=1e-5),
+    )
+
+
+
