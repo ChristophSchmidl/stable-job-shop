@@ -49,6 +49,27 @@
 
 
 ************************************
+    Wandb and stable-baselines3
+************************************
+
+- ML Frameworks: Stable-Baselines3 w/ Antonin Raffin and Anssi Kanervisto: https://www.youtube.com/watch?v=ed1bqaZGOQw
+- https://wandb.ai/site/articles/running-hyperparameter-sweeps-to-pick-the-best-model-using-w-b
+- https://wandb.ai/jmcginn/pytorch-nflows-EOS/reports/Hyperparameter-Optimisation--VmlldzoxMDEwMDc2
+- Organizing_Hyperparameter_Sweeps_in_PyTorch_with_W&B.ipynb: https://colab.research.google.com/github/wandb/examples/blob/master/colabs/pytorch/Organizing_Hyperparameter_Sweeps_in_PyTorch_with_W%26B.ipynb#scrollTo=2Q-xqt5ZHm98
+- Log_(Almost)_Anything_with_W&B_Media.ipynb: https://colab.research.google.com/github/wandb/examples/blob/master/colabs/wandb-log/Log_(Almost)_Anything_with_W%26B_Media.ipynb
+- Simple_PyTorch_Integration.ipynb: https://colab.research.google.com/github/wandb/examples/blob/master/colabs/pytorch/Simple_PyTorch_Integration.ipynb#scrollTo=XUvF9RacdJ05
+- https://docs.wandb.ai/guides/sweeps/existing-project
+- https://wandb.ai/site/articles/hyperparameter-tuning-as-easy-as-1-2-3
+- https://docs.wandb.ai/guides/integrations/pytorch
+- https://docs.wandb.ai/guides/integrations/other/stable-baselines-3
+- https://docs.wandb.ai/guides/sweeps/quickstart
+- https://medium.com/analytics-vidhya/weights-and-biases-ify-stable-baselines-models-in-finrl-f11b67f2a6a7
+- https://stable-baselines.readthedocs.io/en/master/guide/custom_policy.html
+- https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
+- https://github.com/wandb/examples/blob/master/colabs/stable_baselines3/Stable_Baselines3_wandb_experiment_tracking.ipynb
+
+
+************************************
     Callbacks in stable-baselines
 ************************************
 
