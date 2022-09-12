@@ -5,6 +5,7 @@ from sb3_contrib.common.wrappers import ActionMasker
 from sb3_contrib.ppo_mask import MaskablePPO
 from stable_baselines3.common.monitor import Monitor, load_results
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
+from src.callbacks.SaveOnBestTrainingRewardCallback import SaveOnBestTrainingRewardCallback
 from src.callbacks.StopTrainingOnMaxEpisodes import StopTrainingOnMaxEpisodes
 from src.callbacks.TensorboardCallback import TensorboardCallback
 from src.wrappers.JobShopMonitor import JobShopMonitor
@@ -12,6 +13,7 @@ from stable_baselines3.common import results_plotter
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.vec_env import DummyVecEnv
+import torch as th
 
 import os
 import time
@@ -149,19 +151,53 @@ env.reset()
 #                   Create the model with callbacks
 ###############################################################
 
-def create_model(model_name="MaskablePPO", policy="MlpPolicy", env=None, n_env=1, n_steps=20, n_episodes=20, log_dir=None, verbose=1):
+def create_model(model_name="MaskablePPO", policy="MlpPolicy", env=None, n_env=1, n_steps=20, n_episodes=100, log_dir=None, verbose=1):
     if model_name == "MaskablePPO":
         # Create Callback
         stopTrainingOnMaxEpisodes_callback = StopTrainingOnMaxEpisodes(max_episodes = n_episodes, verbose=verbose)
         tensorboard_callback = TensorboardCallback()
+        saveOnBestTrainingReward_callback = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=log_dir, model_dir=models_dir, verbose=verbose)
         '''
         eval_callback = EvalCallback(env, best_model_save_path='models/jss/PPO/best_model',
                              log_path=log_dir, eval_freq=5,
                              deterministic=False, render=False)
         '''
         # Create the callback list
-        callback = CallbackList([stopTrainingOnMaxEpisodes_callback, tensorboard_callback])
-        model = MaskablePPO('MultiInputPolicy', env, verbose=verbose, tensorboard_log=log_dir)
+        callback = CallbackList([stopTrainingOnMaxEpisodes_callback, saveOnBestTrainingReward_callback, tensorboard_callback])
+
+        '''
+        clip_param: 0.5653 -> SB3 PPO: clip_range
+        entropy_end: 0.00221
+        entropy_start: 0.005503
+        kl_coeff: 0.116
+        kl_target: 0.08849 -> SB3 PPO: target_kl
+        layer_size: 264
+
+        lr_end: 0.00009277 -> SB3 PPO: learning_rate     
+        lr_start: 0.0008534
+
+        num_sgd_iter: 12 -> SB3 PPO: n_epochs?
+        vf_clip_param: 24 -> SB3 PPO: clip_range_vf
+        vf_loss_coeff: 0.9991 -> SB3 PPO: vf_coef
+        episode_reward_mean: 179.046
+        
+        '''
+
+        policy_kwargs = dict(activation_fn=th.nn.ReLU,
+                     net_arch=[264])
+
+        model = MaskablePPO(
+            policy='MultiInputPolicy', 
+            env=env, 
+            clip_range=0.5653,
+            #target_kl=0.08849,
+            #learning_rate=0.0008534,
+            #n_epochs=12,
+            clip_range_vf=24,
+            #vf_coef=0.9991,
+            policy_kwargs=policy_kwargs,
+            verbose=verbose, 
+            tensorboard_log=log_dir)
         #model = PPO("MultiInputPolicy", env, verbose=1, tensorboard_log=log_dir)
         return model, callback
 
@@ -174,7 +210,7 @@ log_df = pd.DataFrame(columns=['episode', 'timesteps', 'time', 'reward', 'makesp
 fig = None
 
 TIMESTEPS = np.inf # Dirty hack to make it run forever
-for i in range(0, 3):
+for i in range(0, 1):
     env = make_jobshop_env(rank=0, seed=i, instance_name="taillard/ta41.txt", monitor_log_path=log_dir + f"_PPO_{str(i)}_")
     model, callback = create_model(
         model_name="MaskablePPO", 
@@ -182,7 +218,7 @@ for i in range(0, 3):
         env=env, 
         n_env=1, 
         n_steps=20, 
-        n_episodes=100, 
+        n_episodes=25000, 
         log_dir=log_dir, 
         verbose=1)
 

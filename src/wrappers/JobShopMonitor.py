@@ -1,5 +1,6 @@
 import csv
 import json
+from logging import raiseExceptions
 import os
 import time
 from glob import glob
@@ -8,6 +9,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import gym
 import numpy as np
 import pandas
+from gym.error import InvalidAction
 
 
 from stable_baselines3.common.type_aliases import GymObs, GymStepReturn
@@ -83,8 +85,18 @@ class JobShopMonitor(gym.Wrapper):
         """
         if self.needs_reset:
             raise RuntimeError("Tried to step environment that needs reset")
+        
+
+        if not (legal_action:=self.env.get_legal_actions())[action]:
+            raise InvalidAction(f"Action is not valid: {action} not in {legal_action}")
+
         observation, reward, done, info = self.env.step(action)
         self.rewards.append(reward)
+        #print(f"Observation: {observation}")
+        #print(f"Action taken: {action}")
+        #print(f"Reward after step: {reward}")
+        #print(f"Done: {done}")
+        #print(f"Info: {info}")
         if done:
             self.needs_reset = True
             ep_rew = sum(self.rewards) # Episode reward = sum of all rewards of a step

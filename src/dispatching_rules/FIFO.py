@@ -4,7 +4,7 @@ import gym
 import JSSEnv
 
 
-def FIFO_worker(instance_name = "taillard/ta42.txt", seed=1337):
+def FIFO_worker(instance_name = "taillard/ta41.txt", seed=1337):
     print(f"Creating environment...\n")
     env = gym.make('jss-v1', env_config={'instance_path': f"./data/instances/{instance_name}"})
     env.seed(seed)
