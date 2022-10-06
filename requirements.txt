@@ -2,9 +2,10 @@ stable-baselines3
 swig
 gym
 gym[box2d]
-tensorboard
-opencv-python
-JSSEnv
+#tensorboard // optional. You can also just use wandb
+#opencv-python // Only used for the tutorial part?
+#JSSEnv // Copied into my own envs folder
 seaborn
 ipython
 sb3-contrib
+wandb

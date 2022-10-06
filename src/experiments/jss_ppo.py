@@ -8,7 +8,8 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback,
 from src.callbacks.SaveOnBestTrainingRewardCallback import SaveOnBestTrainingRewardCallback
 from src.callbacks.StopTrainingOnMaxEpisodes import StopTrainingOnMaxEpisodes
 from src.callbacks.TensorboardCallback import TensorboardCallback
-from src.utils.environment import make_jobshop_env
+from src.utils import make_jobshop_env
+from src.envs.JobShopEnv.envs.JssEnv import JssEnv
 from stable_baselines3.common import results_plotter
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.utils import set_random_seed
@@ -17,7 +18,6 @@ import torch as th
 
 import os
 import time
-import JSSEnv
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -169,13 +169,13 @@ def create_model(model_name="MaskablePPO", policy="MlpPolicy", env=None, n_env=1
         model = MaskablePPO(
             policy='MultiInputPolicy', 
             env=env, 
-            clip_range=0.5653,
+            #clip_range=0.5653,
             #target_kl=0.08849,
             #learning_rate=0.0008534,
             #n_epochs=12,
-            clip_range_vf=24,
+            #clip_range_vf=24,
             #vf_coef=0.9991,
-            policy_kwargs=policy_kwargs,
+            #policy_kwargs=policy_kwargs,
             verbose=verbose, 
             tensorboard_log=log_dir)
         #model = PPO("MultiInputPolicy", env, verbose=1, tensorboard_log=log_dir)
@@ -209,6 +209,8 @@ for i in range(0, 1):
     episode_lengths = env.get_episode_lengths()
     episode_times = env.get_episode_times()
     episode_makespans = env.get_episode_makespans()
+
+
 
     log_df = log_df.append(pd.DataFrame({"episode": np.arange(len(episode_rewards)), "timesteps": episode_lengths, "time": episode_times, "reward": episode_rewards, "makespan": episode_makespans, "model_id": i}))
 

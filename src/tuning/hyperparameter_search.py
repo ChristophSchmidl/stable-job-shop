@@ -73,7 +73,7 @@ episode_reward_mean: 179.046
 
 sweep_config = {
     "name": "jss-ppo-sweep",
-    "method": "random",
+    "method": "bayes",
     "metric": {
         "name": "episode_rewards",
         "goal": "maximize"

@@ -5,15 +5,18 @@ import os
 import time
 from glob import glob
 from typing import Dict, List, Optional, Tuple, Union
-
 import gym
 import numpy as np
 import pandas
 from gym.error import InvalidAction
-
-
 from stable_baselines3.common.type_aliases import GymObs, GymStepReturn
 
+
+class CustomEnvInfo(gym.Wrapper):
+    def step(self, action):
+        obs, rew, done, info = super().step(action)
+        info.update({"makespan": self.current_time_step})
+        return obs, rew, done, info
 
 class JobShopMonitor(gym.Wrapper):
     """
