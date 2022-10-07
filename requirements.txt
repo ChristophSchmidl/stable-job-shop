@@ -9,3 +9,6 @@ seaborn
 ipython
 sb3-contrib
 wandb
+pytest
+pytest-sugar
+pytest-cov
