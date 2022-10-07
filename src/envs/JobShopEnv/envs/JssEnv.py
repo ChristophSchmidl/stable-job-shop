@@ -9,7 +9,7 @@ import plotly.figure_factory as ff
 from pathlib import Path
 
 from src.io.jobshoploader import JobShopLoader
-from src.utils import permute_instance, reverse_permuted_instance
+from src.utils.permutation_handler import PermutationHandler
 
 
 class JssEnv(gym.Env):
@@ -183,17 +183,17 @@ class JssEnv(gym.Env):
     def _permute_instance_matrix(self):
         # Permutes the instance matrix at random and returns the permuted instance 
         # together with the permutation matrix and permutation indices to repeat the process.
-        self.instance_matrix, self.perm_matrix, self.perm_indices = permute_instance(self.original_instance_matrix)
+        self.instance_matrix, self.perm_matrix, self.perm_indices = PermutationHandler.permute(self.original_instance_matrix)
 
     def _permute_jobs_length(self):
-        self.jobs_length, _, _ = permute_instance(self.original_jobs_length)
+        self.jobs_length, _, _ = PermutationHandler.permute(self.original_jobs_length, self.perm_indices)
 
     def reset(self):
 
         if self.permutation_mode:
             self._permute_instance_matrix()
-            self._permute_jobs_length()
-            self.jobs_length = np.copy(self.original_jobs_length)
+            #self._permute_jobs_length()
+            #self.jobs_length = np.copy(self.original_jobs_length)
         else:
             self.instance_matrix = np.copy(self.original_instance_matrix)
             self.jobs_length = np.copy(self.original_jobs_length)
@@ -300,15 +300,12 @@ class JssEnv(gym.Env):
                             time_step += 1
 
     def step(self, action: int):
-        print("Stepping through the environment...")
-        print("Action taken in step function: ", action)
         reward = 0.0
-        print(f"self.jobs in the step function: {self.jobs}")
 
         # Taking the last job? Is that the no-op?
         if action == self.jobs:
 
-            print("The action is mapping to a job in the step function...")
+            #print("The action is mapping to a job in the step function...")
             self.nb_machine_legal = 0
             self.nb_legal_actions = 0
             for job in range(self.jobs):
@@ -325,7 +322,7 @@ class JssEnv(gym.Env):
             self._check_no_op()
             return self._get_current_state_representation(), scaled_reward, self._is_done(), {"makespan": self.current_time_step}
         else:
-            print("The action is not mapping to a job in the step function...")
+            #print("The action is not mapping to a job in the step function...")
             current_time_step_job = self.todo_time_step_job[action]
             machine_needed = self.needed_machine_jobs[action]
             time_needed = self.instance_matrix[action][current_time_step_job][1]
@@ -357,7 +354,6 @@ class JssEnv(gym.Env):
             # we then need to scale the reward
             scaled_reward = self._reward_scaler(reward)
             
-            print(f"Returning the next state from the step function...")
             return self._get_current_state_representation(), scaled_reward, self._is_done(), {"makespan": self.current_time_step}
 
     def _reward_scaler(self, reward):

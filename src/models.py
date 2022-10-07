@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Tuple, Type, Union
 from stable_baselines3.common.policies import obs_as_tensor
 import numpy as np
 import pprint
-from src.utils import permute_instance, reverse_permuted_instance
+from src.utils.permutation_handler import PermutationHandler
 
 ###############################################################
 #                       Operation class
@@ -160,59 +160,23 @@ class MaskablePPOPermutationHandler:
       self.model = self._load_model(model_path)
       self._print_permutation_mode()
 
-    def reverse_permuted_boolean_action_masks(self, action_masks, perm_matrix):
-        original_action_masks = np.copy(action_masks)
-
-        #pprint.pprint(action_masks)
-        #print(f"action_masks shape: {action_masks.shape}")
+    def invert_action_masks(self, action_masks, perm_matrix):
+        action_masks = np.copy(action_masks)
 
         # original_action_mask[0] = the raw action mask
         # original_action_mask[0][:-1] = the raw action mask without the no_op
-        permutation = reverse_permuted_instance(action_masks[0][:-1], perm_matrix)
-        # Why is permutation of type tuple?
-        permutation = list(permutation)
-        # Append the no-op operation
-        permutation.append(action_masks[0][-1])
-        permutation = np.asarray(permutation, dtype=action_masks[0].dtype)
-        #print(f"Type of permutation {type(permutation)}")
+                
+        inverse_action_mask = PermutationHandler.inverse_permute(action_masks[0][:-1], perm_matrix)
+        inverse_action_mask = np.append(inverse_action_mask,action_masks[0][-1]).astype(action_masks.dtype) # Add the no-op
 
-        original_action_masks[0] = permutation
-        #pprint.pprint(original_action_masks)
-        return original_action_masks
+        return inverse_action_mask
 
-    def _reverse_permuted_real_obs(self, real_obs, perm_matrix):
-        original_real_obs = np.copy(real_obs)
-
-        # Reverse the permutation the real_obs
-        permutation = reverse_permuted_instance(original_real_obs[0], perm_matrix)
-        permutation = list(permutation)[0]
-        permutation = np.asarray(permutation, dtype=real_obs[0].dtype)
-
-        original_real_obs[0] = permutation
-        return original_real_obs
-
-    def _reverse_permuted_action_mask(self, action_mask, perm_matrix):
-        '''
-        The action_mask contains number_of_jobs + 1 entry (no_op).
-        So, the permutation only has to be performed for the jobs and not the no_op.
-        '''
-        original_action_mask = np.copy(action_mask)
-
-        # Reverse the permutation of actions
-        permutation = reverse_permuted_instance(original_action_mask[0][:-1], perm_matrix)
-        permutation = list(permutation)
-        permutation.append(original_action_mask[0][-1]) # Add the no-op
-        permutation = np.asarray(permutation, dtype=original_action_mask[0].dtype)
-        #print(permutation)
-
-        original_action_mask[0] = permutation
-        return original_action_mask
 
     def reverse_permuted_action_probas(self, actions, perm_matrix):
         original_actions = np.copy(actions)
 
         # Reverse the permutation of actions
-        permutation = reverse_permuted_instance(original_actions[0][:-1], perm_matrix)
+        permutation = PermutationHandler.inverse_permute(original_actions[0][:-1], perm_matrix)
         permutation = list(permutation)
         permutation.append(original_actions[0][-1])
         permutation = np.asarray(permutation, dtype=actions[0].dtype)
@@ -221,36 +185,39 @@ class MaskablePPOPermutationHandler:
         original_actions[0] = permutation
         return original_actions
 
+    def get_inverse_action(self, action: int, perm_indices):
+
+        #print(f"action_space.n: {self.env.action_space.n}")
+
+        # self.env.action_space.n = number_of_jobs + 1 (no-op) (31 in our case)
+        if action == self.env.action_space.n - 1:
+            return action
+
+        action_vector = np.zeros(self.env.action_space.n - 1)
+        action_vector[action] = 1
+        inverse_action_vector = [action_vector[i] for i in perm_indices]
+        inverse_action = np.argmax(inverse_action_vector)
 
 
-    def reverse_permuted_observation(self, observation, perm_matrix):
-        '''
-        Observation is an OrderedDict with "action_mask" and "real_obs".
-        action_mask: <class 'numpy.ndarray'>, shape -> (1, 31), dtype=float32 31 because number_of_jobs + 1
-        real_obs: <class 'numpy.ndarray'>, shape -> (1, 30, 7), dtype=float32 30 because number_of_jobs, 7 features
-        We probably have to permute both of them and update the dictionary.
-        '''
+        #print("Action: {} -> Inverted action: {}".format(action, inverse_action))
+        return inverse_action
 
-        ####################################################
-        #   Reversing the permutation of the action_mask
-        ####################################################
+        action_vector = np.zeros(self.env.action_space.n)
+        print(f"Len of the action vector: {len(action_vector)}")
+        action_vector[action] = 1
 
-        restored_action_mask = self._reverse_permuted_action_mask(observation["action_mask"], perm_matrix)
-        observation["action_mask"] = restored_action_mask
-        pprint.pprint(observation)
+        # Permute the action_vector
+        permuted_action_vector, _, _ = permute_instance(action_vector[:-1], perm_indices)
+        print(f"original_action_vector: {action_vector}")
+        print(f"permuted_action_vector: {permuted_action_vector}")
 
+        print(f"Index of the action in the original action vector: {np.argmax(action_vector)}")
+        print(f"Index of the action in the permuted action vector: {np.argmax(permuted_action_vector[0])}")
 
-        ####################################################
-        #   Handling the permutation of the real_obs
-        ####################################################
+        print(np.argmax(permuted_action_vector[0]))
+        print(perm_action)
 
-        restored_real_obs = self._reverse_permuted_real_obs(observation["real_obs"], perm_matrix)
-
-        # Update the observation
-        observation["action_mask"] = restored_action_mask
-        observation["real_obs"] = restored_real_obs
-
-        return observation
+        return np.argmax(permuted_action_vector)
 
       
     def _load_model(self, model_path):
@@ -274,17 +241,13 @@ class MaskablePPOPermutationHandler:
             print("#       Model is NOT in permutation mode!   #")
             print("#############################################\n")
 
-    def _predict_probas(self, model, state):
-        obs = model.policy.obs_to_tensor(state)[0]
-        #obs = obs_as_tensor(state, model.policy.device)
-        dis = model.policy.get_distribution(obs)
+    def _predict_masked_probas(self, model, state, action_masks=None):
+        #obs = model.policy.obs_to_tensor(state)[0]
+        obs = obs_as_tensor(state, model.policy.device)
+        dis = model.policy.get_distribution(obs, action_masks) # I can insert the boolean mask here
         probs = dis.distribution.probs
         probs_np = probs.detach().numpy()
         return probs_np
-
-    def _mask_probas(self, probas, mask):
-        probas[~mask] = 0
-        return probas
 
 
     def permute_probas(self, probas, perm_indices):
@@ -293,32 +256,40 @@ class MaskablePPOPermutationHandler:
         '''
         original_action_probas = np.copy(probas)
 
-        print(f"Size of original_action_probas: {len(original_action_probas[0])}")
-        pprint.pprint(original_action_probas[0])
-
-
-        # Reverse the permutation of actions
-        permutation, _, _ = permute_instance(original_action_probas[0][:-1], perm_indices)
+        permutation, _, _ = PermutationHandler.permute(original_action_probas[0][:-1], perm_indices)
         permutation = list(permutation)
-        print(f"Size of permutation: {len(permutation)}")
-        pprint.pprint(permutation)
+
         permutation.append(original_action_probas[0][-1])
-        print(f"Size of permutation: {len(permutation)}")
-        pprint.pprint(permutation)
-        
-        
-
         permutation = np.asarray(permutation, dtype=original_action_probas.dtype)
-        #print(permutation)
-
-        pprint.pprint(original_action_probas[0])
-        pprint.pprint(permutation)
-
-        pprint.pprint(len(original_action_probas[0]))
-        pprint.pprint(len(permutation))
 
         original_action_probas[0] = permutation
         return original_action_probas
+
+    def invert_observation(self, observation, perm_matrix):
+        
+        #observation = np.copy(observation)
+        action_mask = observation["action_mask"]
+        real_obs = observation["real_obs"]
+
+        ####################################################
+        #   Reversing the permutation of the action_mask
+        ####################################################
+        '''
+        The action_mask contains number_of_jobs + 1 entry (no_op).
+        So, the permutation only has to be performed for the jobs and not the no_op.
+        '''    
+        inverse_action_mask = PermutationHandler.inverse_permute(action_mask[0][:-1], perm_matrix)
+        inverse_action_mask = np.append(inverse_action_mask, action_mask[0][-1]).astype(action_mask.dtype) # Add the no-op
+        observation["action_mask"][0] = inverse_action_mask
+
+        ####################################################
+        #   Handling the permutation of the real_obs
+        ####################################################
+
+        inverse_real_obs = PermutationHandler.inverse_permute(observation["real_obs"][0], perm_matrix)
+        observation["real_obs"][0] = inverse_real_obs
+
+        return observation
 
 
     def predict(
@@ -344,50 +315,22 @@ class MaskablePPOPermutationHandler:
 
         permutation_mode = self.env.get_attr('permutation_mode')[0]
         
-        # Handling inputs: observation and actions_masks
-        # Input has to be reverted to the original
         if permutation_mode:
-
-            # Handling inputs
-            perm_matrix = self.env.get_attr('perm_matrix')[0]
-            observation = self.reverse_permuted_observation(observation, perm_matrix)
-            action_masks = self.reverse_permuted_boolean_action_masks(action_masks, perm_matrix)
-
-            # Handling outputs
-            # Output has to be permuted the same way as the Env did
-            perm_indices = self.env.get_attr('perm_indices')[0]
-            # 1. Get all probabilities of the original actions
-            # 2. Mask the invalid actions with the reversted action_masks
-            # 3. Permute the probabilities as the env did
-            # 4. Get the action with the highest probability and return it
-
-            action_distribution = self.model.policy.get_distribution(observation, action_masks)
-            print(action_distribution)
-
+            perm_indices = self.env.get_attr('perm_indices') # To repeat the permuation of the env
+            perm_matrix = self.env.get_attr('perm_matrix')[0] # To reverse the permutation of the env
             
+            inverted_observation = self.invert_observation(observation, perm_matrix)
+            inverted_action_masks = self.invert_action_masks(action_masks, perm_matrix)
 
-            #action_probas = self._predict_probas(self.model, observation)
-            #action_probas = self._mask_probas(action_probas, action_masks)
+            _actions, _states = self.model.predict(inverted_observation, state, episode_start, deterministic, inverted_action_masks)
+            _actions = [self.get_inverse_action(_actions[0], perm_indices)]
+        
+            #action_probas = self._predict_masked_probas(self.model, observation, action_masks)
             #permuted_action_probas = self.permute_probas(action_probas, perm_indices)
             #_actions = [np.argmax(permuted_action_probas)]
-            _states = None
 
         else:
-            #_actions, _states = self.model.predict(observation, state, episode_start, deterministic, action_masks)
-            action_distribution = self.model.policy.get_distribution(observation, action_masks)
-            pprint.pprint(action_distribution)
-
-
-        
-
-        #print(permuted_action_probas)
-        #index_with_hight_prob = np.argmax(permuted_action_probas)
-
-        # 1. Apply the permuted action_mask to the action_probs
-        # 1a. if index is 0, just put the value to -infty?
-        # 2. Get the index of the highest value
-        # https://stackoverflow.com/questions/66836922/python-filter-numpy-array-based-on-mask-array
-        # 
+            _actions, _states = self.model.predict(observation, state, episode_start, deterministic, action_masks)
 
         return _actions, _states
 

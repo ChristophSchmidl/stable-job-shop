@@ -119,3 +119,9 @@ num_sgd_iter: 12 -> SB3 PPO: n_epochs?
 vf_clip_param: 24 -> SB3 PPO: clip_range_vf
 vf_loss_coeff: 0.9991 -> SB3 PPO: vf_coef
 episode_reward_mean: 179.046
+
+************************************
+        Pytest
+************************************
+
+pytest -v -W ignore::DeprecationWarning

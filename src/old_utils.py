@@ -145,49 +145,6 @@ def make_env(env_id, rank=0, seed=0, instance_name="taillard/ta01.txt", permutat
     set_random_seed(seed)
     return _init
 
-def permute_instance(instance, perm_indices=None):
-  '''
-  Returns the permuted instance and the permutation indices (for repeating the same permutation)
-  '''
-  # see also: https://stackoverflow.com/questions/18272160/access-multiple-elements-of-list-knowing-their-index
-  job_count = len(instance)
-  perm_indices = perm_indices
-  permuted_instance = None
-
-  if perm_indices is None:
-    # Do random permutation
-    #print("Doing random permutation...")
-    perm_indices = torch.randperm(job_count).long()
-    perm_matrix = torch.eye(job_count)[perm_indices].t()
-  else:
-    # Do permutation based on perm_indices
-    #print("Doing permutation based on indices...")
-    perm_matrix = torch.eye(job_count)[perm_indices].t()
-
-  #print(perm_indices)
-  permuted_instance = [ instance[i] for i in perm_indices]
-  #print(f"Perm_indices type {type(perm_indices)}")
-  #print(f"Perm_indices shape {perm_indices.shape}")
-  #print(f"Permuted instance type {type(permuted_instance)}")
-  #print(f"Item of permuted instance type {type(permuted_instance[0])}")
-#  print(f"Item content of permuted instance type {permuted_instance[0][0]}")
-
-  # Permuted_instance is a list of torch tensors which we do not want?
-  return permuted_instance, perm_matrix, perm_indices
-
-def reverse_permuted_instance(permuted_instance, perm_matrix):
-  '''
-  '''
-  job_count = len(permuted_instance)
-  restore_indices = torch.Tensor(list(range(job_count))).view(job_count, 1)
-  restore_indices = perm_matrix.mm(restore_indices).view(job_count).long()
-  restored_instance = [ permuted_instance[i] for i in restore_indices]
-  print(f"Restore indices type {type(restore_indices)}")
-  print(f"Restore indices shape {restore_indices.shape}")
-  print(f"Restored instance type {type(restored_instance)}")
-  return restored_instance
-
-
 '''
 This one is taken from sb3-contrib with masking support and has been tweaked to work with makespan
 '''
@@ -276,19 +233,19 @@ def evaluate_policy_with_makespan(  # noqa: C901
     while (episode_counts < episode_count_targets).any():
         if use_masking:
             action_masks = get_action_masks(env)
-            print(f"Starting prediction in the evaluate policy with makespan function...") 
+            #print(f"Starting prediction in the evaluate policy with makespan function...") 
             actions, state = model.predict(
                 observations,
                 state=states,
                 deterministic=deterministic,
                 action_masks=action_masks,
             )
-            print("Prediction done")
+            #print("Prediction done")
         else:
             actions, states = model.predict(observations, state=states, deterministic=deterministic)
-        print(f"Starting the step function...")
+        #print(f"Starting the step function...")
         observations, rewards, dones, infos = env.step(actions)
-        print("Step function done")
+        #print("Step function done")
         current_rewards += rewards
         current_lengths += 1
         for i in range(n_envs):

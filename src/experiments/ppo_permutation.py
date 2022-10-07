@@ -4,13 +4,9 @@ from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 from src.models import MaskablePPOPermutationHandler
 from src.envs.JobShopEnv.envs.JssEnv import JssEnv
 from src.io.jobshoploader import JobShopLoader
-from src.utils import make_env, evaluate_policy_with_makespan, permute_instance, reverse_permuted_instance
+from src.old_utils import make_env, evaluate_policy_with_makespan
 import pprint
 
-
-'''
-1. Get the problem instance
-'''
 
 ###############################################################
 #                           Globals
@@ -19,7 +15,7 @@ import pprint
 ENV_ID = 'jss-v1'
 INSTANCE_NAME = "taillard/ta41.txt"
 MODEL_PATH = "models/jss/PPO/best_model_not_tuned_25k.zip"
-PERMUTATION_MODE = False
+PERMUTATION_MODE = True
 N_EPISODES = 3000
 
 
@@ -46,7 +42,7 @@ new_logger = configure(log_dir, ["stdout", "csv", "tensorboard"])
 ###############################################################
 #                   Create the environment
 ###############################################################
-env = DummyVecEnv([make_env(ENV_ID, 7, 21, instance_name = "taillard/ta41.txt", permutation_mode=PERMUTATION_MODE, monitor_log_path=log_dir + f"_PPO_Permutation_")])
+env = DummyVecEnv([make_env(ENV_ID, 2, 456, instance_name = "taillard/ta41.txt", permutation_mode=PERMUTATION_MODE, monitor_log_path=log_dir + f"_PPO_Permutation_")])
 # required before you can step through the environment
 env.reset()
 
@@ -61,7 +57,7 @@ job_count, machine_count, list_of_jobs = JobShopLoader.load_jssp_instance_as_lis
 
 
 # Permutate list of jobs
-permuted_list_of_jobs, perm_matrix, perm_indices = permute_instance(list_of_jobs)
+#permuted_list_of_jobs, perm_matrix, perm_indices = permute_instance(list_of_jobs)
 #print.pprint(f"Permuted list of jobs: {permuted_list_of_jobs}")
 #print("\n")
 
@@ -72,6 +68,6 @@ model = MaskablePPOPermutationHandler(model_path=MODEL_PATH, env=env, print_syst
 #                  Test the permutation mode
 ###############################################################
 
-mean_reward, std_reward, mean_makespan, std_makespan = evaluate_policy_with_makespan(model, env, n_eval_episodes=1, deterministic=True)
+mean_reward, std_reward, mean_makespan, std_makespan = evaluate_policy_with_makespan(model, env, n_eval_episodes=1, deterministic=True, use_masking=True)
 
 print(f"Mean reward: {mean_reward}\nStd reward: {std_reward}\nMean makespan: {mean_makespan}\nStd makespan: {std_makespan}")

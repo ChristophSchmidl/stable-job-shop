@@ -10,7 +10,7 @@ class PermutationHandler:
     @staticmethod
     def permute(data: Union[List, np.ndarray], perm_indices: Optional[list[int]] = None) -> tuple[np.ndarray, torch.Tensor, np.ndarray]:
         '''
-        Permutes data randomly or based on perm_indices.and the permutation indices (for repeating the same permutation)
+        Permutes data randomly or based on perm_indices (for repeating the same permutation)
 
         :param data: The data to permute
         :param perm_indices: The permutation indices. If None, the data will be permuted randomly
