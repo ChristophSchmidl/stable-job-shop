@@ -18,7 +18,7 @@ def test_permute(data):
     assert type(perm_indices) is np.ndarray
 
     # This is a permutation based on perm_indices. The result should be the same as the random permutation.
-    permuted_data, _, _ = PermutationHandler.permute(TEST_DATA_LIST, perm_indices)
+    permuted_data, _, _ = PermutationHandler.permute(data, perm_indices)
 
     assert np.array_equal(random_permuted_data, permuted_data)
 
@@ -36,4 +36,4 @@ def test_inverse_permute(data):
     reverted_data = PermutationHandler.inverse_permute(random_permuted_data, perm_matrix)
     reverted_data = np.asarray(reverted_data)
 
-    assert np.array_equal(reverted_data, TEST_DATA_LIST)
+    assert np.array_equal(reverted_data, data)
