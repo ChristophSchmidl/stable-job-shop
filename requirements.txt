@@ -12,3 +12,4 @@ wandb
 pytest
 pytest-sugar
 pytest-cov
+sympy

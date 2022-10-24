@@ -30,6 +30,11 @@ class JssEnv(gym.Env):
         -
         :param env_config: Ray dictionary of config parameter
         """
+
+        ###########################
+        # Possible permutation modes: None, "random", "transpose={int}"
+        ###########################
+
         if env_config is None:
             #env_config = {'instance_path': str(Path(__file__).parent.absolute()) + '/instances/ta80'}
             env_config={'instance_path': f"./data/instances/taillard/ta41.txt"}
@@ -180,18 +185,25 @@ class JssEnv(gym.Env):
     def get_legal_actions(self):
         return self.legal_actions
 
-    def _permute_instance_matrix(self):
+    def _permute_instance_matrix(self, permutation_mode):
         # Permutes the instance matrix at random and returns the permuted instance 
         # together with the permutation matrix and permutation indices to repeat the process.
-        self.instance_matrix, self.perm_matrix, self.perm_indices = PermutationHandler.permute(self.original_instance_matrix)
+        
+        if permutation_mode == "random":
+            # Case: "random" - permute the instance matrix at random
+            self.instance_matrix, self.perm_indices = PermutationHandler.permute(self.original_instance_matrix)
+        elif permutation_mode.find("transpose") != -1:
+            # Case: "transpose" - permute the instance matrix by transposing it with n_swaps
+            n_swaps = int(permutation_mode.split("=")[1])
+            self.instance_matrix, self.perm_indices = PermutationHandler.transpose(self.original_instance_matrix, n_swaps)
 
     def _permute_jobs_length(self):
-        self.jobs_length, _, _ = PermutationHandler.permute(self.original_jobs_length, self.perm_indices)
+        self.jobs_length, _ = PermutationHandler.permute(self.original_jobs_length, self.perm_indices)
 
     def reset(self):
-
-        if self.permutation_mode:
-            self._permute_instance_matrix()
+        #print("Resetting the environment...")
+        if self.permutation_mode is not None:
+            self._permute_instance_matrix(permutation_mode=self.permutation_mode)
             #self._permute_jobs_length()
             #self.jobs_length = np.copy(self.original_jobs_length)
         else:

@@ -19,7 +19,6 @@ PERMUTATION_MODE = True
 N_EPISODES = 3000
 
 
-
 ###############################################################
 #                   Create folders and loggers
 ###############################################################
@@ -53,8 +52,6 @@ env.reset()
 job_count, machine_count, list_of_jobs = JobShopLoader.load_jssp_instance_as_list(f"./data/instances/{INSTANCE_NAME}")
 #pprint.pprint(f"Original list of jobs: {list_of_jobs}")
 #print("\n")
-
-
 
 # Permutate list of jobs
 #permuted_list_of_jobs, perm_matrix, perm_indices = permute_instance(list_of_jobs)
