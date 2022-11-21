@@ -5,6 +5,14 @@ import src.envs.JobShopEnv.envs.JssEnv
 
 
 def FIFO_worker(instance_name = "taillard/ta41.txt", seed=1337):
+    '''
+    Excerpt from "A Reinforcement Learning Environment For Job-Shop Scheduling": 
+
+    The First In First Out (FIFO) rule amounts to take the biggest value of the a_6 attribute, i.e.,
+    the job which was idle for the most time since its last operation. 
+
+    See: reshaped[:, 5] in the code below. # Give me the idle times of all jobs
+    '''
     print(f"Creating environment...\n")
     env = gym.make('jss-v1', env_config={'instance_path': f"./data/instances/{instance_name}", 'permutation_mode': None})
     env.seed(seed)

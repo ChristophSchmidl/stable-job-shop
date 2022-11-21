@@ -6,10 +6,12 @@ import src.envs.JobShopEnv.envs.JssEnv
 
 def MWKR_worker(instance_name = "taillard/ta41.txt", seed=1337):
     '''
-    Most Work Remaining (MWKR)
+    Excerpt from "A Reinforcement Learning Environment For Job-Shop Scheduling": 
 
     The Most Work Remaining (MWKR) is equivalent to take the job with the largest value of the a4 attribute, 
     i.e., the job that has the most left-over time until completion.
+
+    See: reshaped[:, 3] in the code below. # Give me the left-over time of all jobs
     '''
     print(f"Creating environment...\n")
     env = gym.make('jss-v1', env_config={'instance_path': f"./data/instances/{instance_name}", 'permutation_mode': None})
