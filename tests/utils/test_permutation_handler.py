@@ -78,6 +78,37 @@ def test_inverse_transpose_with_even_data(data):
     
     assert np.array_equal(original_data, data)
 
+def get_random_index(data):
+    return np.random.choice(len(data))
+
+@pytest.mark.parametrize("data", [TEST_DATA_LIST_EVEN, TEST_DATA_NDARRAY_EVEN])
+def test_get_permuted_action_index(data):
+    # This is a random permutation
+    randomly_permuted_data, perm_indices = PermutationHandler.permute(data)
+    #print(f"Perm_indices: {perm_indices}")
+    #print(f"Randomly permuted data: {randomly_permuted_data}")
+
+    random_index = get_random_index(data)
+    #print(f"Random index: {random_index}")
+    #print(f"Type of random index: {type(random_index)}")
+
+    original_data_subset = data[random_index]
+    #print(f"Original data subset: {original_data_subset}")
+
+    permuted_index = PermutationHandler.get_permuted_action_index(random_index, perm_indices, False)
+    #print(f"Permuted index: {permuted_index}")
+
+    permuted_data_subset = randomly_permuted_data[permuted_index]
+    #print(f"Permuted data subset: {permuted_data_subset}")
+
+    assert np.array_equal(original_data_subset, permuted_data_subset)
+
+@pytest.mark.parametrize("data", [TEST_DATA_LIST_EVEN, TEST_DATA_NDARRAY_EVEN])
+def test_get_inverse_permuted_action_index(data):
+    # This is a random permutation
+    randomly_permuted_data, perm_indices = PermutationHandler.permute(data)
+    
+
 
 
     

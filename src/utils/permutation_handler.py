@@ -18,6 +18,7 @@ class PermutationHandler:
         :return: The permuted data, the permutation matrix (reverse permutation) and the permutation indices (for repeating the same permutation)
         :rtype: list[Union[torch.Tensor, np.ndarray]]
         '''
+        data = data.copy()
         data_len = len(data)
         permuted_data = None
         perm_matrix = None
@@ -43,6 +44,7 @@ class PermutationHandler:
         :return: The reverted data
         :rtype: np.ndarray
         '''
+        data = data.copy()
         reverted_data = None
         inverse_indices = np.argsort(perm_indices)
         reverted_data = [ data[i] for i in inverse_indices]
@@ -59,6 +61,7 @@ class PermutationHandler:
         :return: The reverted data
         :rtype: np.ndarray
         '''
+        data = data.copy()
         data_len = len(data)
         reverted_data = None
 
@@ -84,6 +87,7 @@ class PermutationHandler:
         if n_swaps > len(data)//2:
             raise ValueError("Distance cannot be greater than half of the length of the list")
 
+        data = data.copy()
         permutation = None
 
         # Transform to ndarray if list
@@ -112,3 +116,72 @@ class PermutationHandler:
             permutation[index_1], permutation[index_2] = permutation[index_2], permutation[index_1]
 
         return np.asarray(permutation), np.asarray(permuted_indices)
+
+    @staticmethod
+    def get_permuted_action_index(action: int, perm_indices, include_no_op=True):
+        '''
+        Usage: When the policy predicts a certain action, we need to get the index of that action in the permuted action space
+               and collect it together with the permuted observation     
+        Note: the length of perm_indices already tells us how many jobs there are.
+              However, we need to increase it by one to account for the no-op operation
+        Returns the permuted action index based on the permutation indices
+        '''
+        assert isinstance(action, (int, np.integer)), "Action must be an integer"
+
+        if len(perm_indices) == 1:
+            perm_indices = perm_indices[0]
+
+        action_space = len(perm_indices)
+        
+
+        # If the action index is the last action in the array
+        # then it's no-op action and we return the no-op action immediately
+        if include_no_op and action == action_space:
+            return action
+
+        return np.where(perm_indices == action)[0][0]
+
+    @staticmethod
+    def get_inverse_permuted_action_index(action: int, perm_indices, include_no_op=True):
+        '''
+        Usage: When the policy predicts a certain action, we need to get the index of that action in the permuted action space
+               and collect it together with the permuted observation     
+        Note: the length of perm_indices already tells us how many jobs there are.
+              However, we need to increase it by one to account for the no-op operation
+        Returns the permuted action index based on the permutation indices
+        '''
+        action = action[0]
+        assert np.issubdtype(action, np.integer), "Action must be an integer"
+
+        action_space = len(perm_indices)
+
+        # If the action index is the last action in the array
+        # then it's no-op action and we return the no-op action immediately
+        if include_no_op and action == action_space:
+            return action
+        else:
+            inverse_indices = np.argsort(perm_indices)
+            return np.where(inverse_indices == action)[0][0]
+
+    @staticmethod
+    def inverse_action_mask(action_mask, perm_indices):
+        action_mask = np.copy(action_mask)
+
+        # original_action_mask[0] = the raw action mask
+        # original_action_mask[0][:-1] = the raw action mask without the no_op
+                
+        inverse_action_mask = PermutationHandler.inverse_permute(action_mask[:-1], perm_indices)
+        inverse_action_mask = np.append(inverse_action_mask,action_mask[-1]).astype(action_mask.dtype) # Add the no-op
+
+        return inverse_action_mask
+
+    @staticmethod
+    def permute_action_mask(action_mask, perm_indices):
+        original_action_mask = np.copy(action_mask)
+                
+        permuted_action_mask, _ = PermutationHandler.permute(original_action_mask[:-1], perm_indices)
+        permuted_action_mask = np.append(permuted_action_mask,original_action_mask[-1]).astype(action_mask.dtype) # Add the no-op
+
+        return permuted_action_mask
+
+    

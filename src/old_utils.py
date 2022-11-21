@@ -133,7 +133,8 @@ def make_env(env_id, rank=0, seed=0, instance_name="taillard/ta01.txt", permutat
     def _init():
         env = gym.make(env_id, env_config={"instance_path": f"./data/instances/{instance_name}", "permutation_mode": permutation_mode, "permutation_matrix": permutation_matrix})
         # Important: use a different seed for each environment
-        env.seed(seed + rank)
+        if rank is not None and seed is not None:
+            env.seed(seed + rank)
         
         if env_id == "jss-v1":
             print("Connecting ActionMasker and JobShopMonitor...\n")
@@ -142,8 +143,192 @@ def make_env(env_id, rank=0, seed=0, instance_name="taillard/ta01.txt", permutat
             #env = VecMonitor(env, monitor_log_path) # None means, no log file
 
         return env
-    set_random_seed(seed)
+
+    if rank is not None and seed is not None:
+        set_random_seed(seed)
     return _init
+
+
+def evaluate_policy_with_makespan_single_env(  # noqa: C901
+    model: MaskablePPO,
+    env: Union[gym.Env, VecEnv],
+    n_eval_episodes: int = 10,
+    deterministic: bool = True,
+    render: bool = False,
+    callback: Optional[Callable[[Dict[str, Any], Dict[str, Any]], None]] = None,
+    reward_threshold: Optional[float] = None,
+    return_episode_rewards: bool = False,
+    warn: bool = True,
+    use_masking: bool = True,
+    ) -> Union[Tuple[float, float], Tuple[List[float], List[int]]]:
+
+    """
+    Runs policy for ``n_eval_episodes`` episodes and returns average reward.
+    If a vector env is passed in, this divides the episodes to evaluate onto the
+    different elements of the vector env. This static division of work is done to
+    remove bias. See https://github.com/DLR-RM/stable-baselines3/issues/402 for more
+    details and discussion.
+
+    .. note::
+        If environment has not been wrapped with ``Monitor`` wrapper, reward and
+        episode lengths are counted as it appears with ``env.step`` calls. If
+        the environment contains wrappers that modify rewards or episode lengths
+        (e.g. reward scaling, early episode reset), these will affect the evaluation
+        results as well. You can avoid this by wrapping environment with ``Monitor``
+        wrapper before anything else.
+
+    :param model: The RL agent you want to evaluate.
+    :param env: The gym environment. In the case of a ``VecEnv``
+        this must contain only one environment.
+    :param n_eval_episodes: Number of episode to evaluate the agent
+    :param deterministic: Whether to use deterministic or stochastic actions
+    :param render: Whether to render the environment or not
+    :param callback: callback function to do additional checks,
+        called after each step. Gets locals() and globals() passed as parameters.
+    :param reward_threshold: Minimum expected reward per episode,
+        this will raise an error if the performance is not met
+    :param return_episode_rewards: If True, a list of rewards and episde lengths
+        per episode will be returned instead of the mean.
+    :param warn: If True (default), warns user about lack of a Monitor wrapper in the
+        evaluation environment.
+    :param use_masking: Whether or not to use invalid action masks during evaluation
+    :return: Mean reward per episode, std of reward per episode.
+        Returns ([float], [int]) when ``return_episode_rewards`` is True, first
+        list containing per-episode rewards and second containing per-episode lengths
+        (in number of steps).
+    """
+
+    if use_masking and not is_masking_supported(env):
+        raise ValueError("Environment does not support action masking. Consider using ActionMasker wrapper")
+
+    is_monitor_wrapped = False
+
+    if isinstance(env, VecEnv):
+        print("VecEnv detected")
+
+    #if not isinstance(env, VecEnv):
+     #   env = DummyVecEnv([lambda: env])
+
+    #is_monitor_wrapped = is_vecenv_wrapped(env, VecMonitor) or env.env_is_wrapped(Monitor)[0]
+
+    if not is_monitor_wrapped and warn:
+        warnings.warn(
+            "Evaluation environment is not wrapped with a ``Monitor`` wrapper. "
+            "This may result in reporting modified episode lengths and rewards, if other wrappers happen to modify these. "
+            "Consider wrapping environment first with ``Monitor`` wrapper.",
+            UserWarning,
+        )
+
+    episode_rewards = []
+    episodes_makespans = []
+    episode_lengths = []
+
+    episode_counts = 0
+    # Divides episodes among different sub environments in the vector as evenly as possible
+    episode_count_targets = n_eval_episodes + 1
+
+    current_rewards = 0
+    current_lengths = 0
+
+
+    #############################
+    #   Initial observation: state 1
+    #############################
+    print(f"Initial env reset from old_utils.py")
+    observations = env.reset()
+    states = None
+
+    #############################
+    #   Run evaluation episodes for episode_count_targets
+    #############################
+    while (episode_counts < episode_count_targets):
+        if use_masking:
+            ##############################
+            #   Get (initial action mask)
+            ###############################
+            action_masks = get_action_masks(env)
+            assert action_masks is not None, "Action masks are None, but masking is enabled"
+            assert type(action_masks) is np.ndarray, "Action masks are not a numpy array"
+
+            ##############################
+            #   Predict action based on (initial) observation: action taken after seeing state 1
+            ###############################
+            
+            # permuted_observation -> model inverses the observation -> 
+            actions, state = model.predict(
+                observations,
+                state=states,
+                deterministic=deterministic,
+                action_masks=action_masks,
+            )
+            #print("Prediction done")
+        else:
+            ##########################
+            # We are using masking, so this is not needed
+            ##########################
+            print("Not using masking")
+            actions, states = model.predict(observations, state=states, deterministic=deterministic)
+        
+        #############################
+        #   Perform (valid) action. Get (new) observation, reward, done, info
+        #############################
+        observations_before_step = observations.copy()
+        #print(actions)
+        observations, reward, done, info = env.step(actions)
+        observations_after_step = observations.copy()
+        #print("Step function done")
+        current_rewards += reward
+        current_lengths += 1
+
+        if callback is not None:
+            callback(locals(), globals())
+
+        if done:
+            print("is done...")
+            if is_monitor_wrapped:
+                
+                # Atari wrapper can send a "done" signal when
+                # the agent loses a life, but it does not correspond
+                # to the true end of episode
+                if "episode" in info.keys():
+                    # Do not trust "done" with episode endings.
+                    # Monitor wrapper includes "episode" key in info if environment
+                    # has been wrapped with it. Use those rewards instead.
+                    episode_rewards.append(info["episode"]["r"])
+                    episode_lengths.append(info["episode"]["l"])
+                    #episodes_makespans.append(info["episode"]["m"])
+                    # Only increment at the real end of an episode
+                    episode_counts += 1
+
+            else:
+                episode_rewards.append(current_rewards)
+                episode_lengths.append(current_lengths)
+                episodes_makespans.append(info["makespan"])
+                episode_counts += 1
+            current_rewards = 0
+            current_lengths = 0
+            if states is not None:
+                states *= 0
+            observations = env.reset()
+
+        if render:
+            env.render()
+
+    mean_reward = np.mean(episode_rewards)
+    std_reward = np.std(episode_rewards)
+
+    mean_makespan = np.mean(episodes_makespans)
+    std_makespan = np.std(episodes_makespans)
+
+    if reward_threshold is not None:
+        assert mean_reward > reward_threshold, "Mean reward below threshold: " f"{mean_reward:.2f} < {reward_threshold:.2f}"
+    if return_episode_rewards:
+        return episode_rewards, episode_lengths
+    return mean_reward, std_reward, mean_makespan, std_makespan
+
+
+
+
 
 '''
 This one is taken from sb3-contrib with masking support and has been tweaked to work with makespan
@@ -222,18 +407,37 @@ def evaluate_policy_with_makespan(  # noqa: C901
 
     episode_counts = np.zeros(n_envs, dtype="int")
     # Divides episodes among different sub environments in the vector as evenly as possible
-    episode_count_targets = np.array([(n_eval_episodes + i) // n_envs for i in range(n_envs)], dtype="int")
+    episode_count_targets = np.array([(n_eval_episodes + 1) // n_envs for i in range(n_envs)], dtype="int")
 
     current_rewards = np.zeros(n_envs)
     current_lengths = np.zeros(n_envs, dtype="int")
 
+
+    #############################
+    #   Initial observation: state 1
+    #############################
     observations = env.reset()
     states = None
 
+    #############################
+    #   Run evaluation episodes for episode_count_targets
+    #############################
     while (episode_counts < episode_count_targets).any():
         if use_masking:
+            ##############################
+            #   Get (initial action mask)
+            ###############################
             action_masks = get_action_masks(env)
-            #print(f"Starting prediction in the evaluate policy with makespan function...") 
+            assert action_masks is not None, "Action masks are None, but masking is enabled"
+            assert type(action_masks) is np.ndarray, "Action masks are not a numpy array"
+
+            
+
+            ##############################
+            #   Predict action based on (initial) observation: action taken after seeing state 1
+            ###############################
+            
+            # permuted_observation -> model inverses the observation -> 
             actions, state = model.predict(
                 observations,
                 state=states,
@@ -242,12 +446,21 @@ def evaluate_policy_with_makespan(  # noqa: C901
             )
             #print("Prediction done")
         else:
+            ##########################
+            # We are using masking, so this is not needed
+            ##########################
             actions, states = model.predict(observations, state=states, deterministic=deterministic)
-        #print(f"Starting the step function...")
+        
+        #############################
+        #   Perform (valid) action. Get (new) observation, reward, done, info
+        #############################
+        observations_before_step = observations.copy()
         observations, rewards, dones, infos = env.step(actions)
+        observations_after_step = observations.copy()
         #print("Step function done")
         current_rewards += rewards
         current_lengths += 1
+
         for i in range(n_envs):
             if episode_counts[i] < episode_count_targets[i]:
 

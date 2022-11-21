@@ -163,16 +163,7 @@ class MaskablePPOPermutationHandler:
       self.model = self._load_model(model_path)
       self._print_permutation_mode()
 
-    def invert_action_masks(self, action_masks, perm_matrix):
-        action_masks = np.copy(action_masks)
 
-        # original_action_mask[0] = the raw action mask
-        # original_action_mask[0][:-1] = the raw action mask without the no_op
-                
-        inverse_action_mask = PermutationHandler.inverse_permute(action_masks[0][:-1], perm_matrix)
-        inverse_action_mask = np.append(inverse_action_mask,action_masks[0][-1]).astype(action_masks.dtype) # Add the no-op
-
-        return inverse_action_mask
 
 
     def reverse_permuted_action_probas(self, actions, perm_matrix):
@@ -188,22 +179,7 @@ class MaskablePPOPermutationHandler:
         original_actions[0] = permutation
         return original_actions
 
-    def get_inverse_action(self, action: int, perm_indices):
 
-        #print(f"action_space.n: {self.env.action_space.n}")
-
-        # self.env.action_space.n = number_of_jobs + 1 (no-op) (31 in our case)
-        if action == self.env.action_space.n - 1:
-            return action
-
-        action_vector = np.zeros(self.env.action_space.n - 1)
-        action_vector[action] = 1
-        inverse_action_vector = [action_vector[i] for i in perm_indices]
-        inverse_action = np.argmax(inverse_action_vector)
-
-
-        #print("Action: {} -> Inverted action: {}".format(action, inverse_action))
-        return inverse_action
 
       
     def _load_model(self, model_path):
@@ -216,7 +192,8 @@ class MaskablePPOPermutationHandler:
             print("Model file does not exist: {}".format(model_path))
 
     def _print_permutation_mode(self):
-        permutation_mode = self.env.get_attr('permutation_mode')[0]
+        #permutation_mode = self.env.get_attr('permutation_mode')[0]
+        permutation_mode = self.env.permutation_mode
         
         if permutation_mode is not None and permutation_mode == "random":
             print("\n##################################################")
@@ -269,16 +246,16 @@ class MaskablePPOPermutationHandler:
         The action_mask contains number_of_jobs + 1 entry (no_op).
         So, the permutation only has to be performed for the jobs and not the no_op.
         '''    
-        inverse_action_mask = PermutationHandler.inverse_permute(action_mask[0][:-1], perm_indices)
-        inverse_action_mask = np.append(inverse_action_mask, action_mask[0][-1]).astype(action_mask.dtype) # Add the no-op
-        observation["action_mask"][0] = inverse_action_mask
+        inverse_action_mask = PermutationHandler.inverse_permute(action_mask[:-1], perm_indices)
+        inverse_action_mask = np.append(inverse_action_mask, action_mask[-1]).astype(action_mask.dtype) # Add the no-op
+        observation["action_mask"] = inverse_action_mask
 
         ####################################################
         #   Handling the permutation of the real_obs
         ####################################################
 
-        inverse_real_obs = PermutationHandler.inverse_permute(observation["real_obs"][0], perm_indices)
-        observation["real_obs"][0] = inverse_real_obs
+        inverse_real_obs = PermutationHandler.inverse_permute(observation["real_obs"], perm_indices)
+        observation["real_obs"] = inverse_real_obs
 
         return observation
 
@@ -304,22 +281,26 @@ class MaskablePPOPermutationHandler:
             (used in recurrent policies)
         """
 
-        permutation_mode = self.env.get_attr('permutation_mode')[0]
+        #permutation_mode = self.env.get_attr('permutation_mode')[0]
+        permutation_mode = self.env.permutation_mode
         
-        if permutation_mode:
-            perm_indices = self.env.get_attr('perm_indices') # To repeat the permuation of the env
+        if permutation_mode is not None:
+            #perm_indices = self.env.get_attr('perm_indices') # To repeat the permuation of the env
             #perm_matrix = self.env.get_attr('perm_matrix')[0] # To reverse the permutation of the env
+            perm_indices = self.env.perm_indices
             
-            inverted_observation = self.invert_observation(observation, perm_indices)
-            inverted_action_masks = self.invert_action_masks(action_masks, perm_indices)
+            inverted_observation = self.invert_observation(observation.copy(), perm_indices)
+            inverted_action_masks = PermutationHandler.inverse_action_mask(action_masks.copy(), perm_indices)
 
             _actions, _states = self.model.predict(inverted_observation, state, episode_start, deterministic, inverted_action_masks)
-            _actions = [self.get_inverse_action(_actions[0], perm_indices)]
+            #print(f"Actions before permutation: {_actions}")
+            _actions = [PermutationHandler.get_permuted_action_index(_actions, perm_indices)]
+            #print(f"Actions after permutation: {_actions}")
+
         
             #action_probas = self._predict_masked_probas(self.model, observation, action_masks)
             #permuted_action_probas = self.permute_probas(action_probas, perm_indices)
             #_actions = [np.argmax(permuted_action_probas)]
-
         else:
             _actions, _states = self.model.predict(observation, state, episode_start, deterministic, action_masks)
 

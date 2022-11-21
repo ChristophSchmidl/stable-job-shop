@@ -7,6 +7,8 @@ import gym
 import numpy as np
 import plotly.figure_factory as ff
 from pathlib import Path
+import sys
+import inspect
 
 from src.io.jobshoploader import JobShopLoader
 from src.utils.permutation_handler import PermutationHandler
@@ -176,36 +178,98 @@ class JssEnv(gym.Env):
         })
 
     def _get_current_state_representation(self):
-        self.state[:, 0] = self.legal_actions[:-1]
-        return {
-            "real_obs": self.state,
-            "action_mask": self.legal_actions,
-        }
+        #####################################
+        # Check for permutation or transposition
+        #####################################
+        if self.permutation_mode is not None:
+            permuted_state = self.state.copy()
+            permuted_state, _ = PermutationHandler.permute(permuted_state, self.perm_indices)
+            permuted_state[:,0] = self.get_legal_actions()[:-1]
+            
+            return {
+                "real_obs": permuted_state,
+                "action_mask": self.get_legal_actions(),
+            }
+        else:
+            self.state[:, 0] = self.get_legal_actions()[:-1]
+            return {
+                "real_obs": self.state,
+                "action_mask": self.get_legal_actions(),
+            }
 
     def get_legal_actions(self):
-        return self.legal_actions
+        #####################################
+        # Check for permutation or transposition
+        #####################################
+        if self.permutation_mode is not None:
+            permuted_legal_actions = None
+            job_action_mask = np.copy(self.legal_actions[:-1]) # mask without no-op
+            permuted_job_action_mask, _ = PermutationHandler.permute(job_action_mask, self.perm_indices)    
+            permuted_legal_action = np.append(permuted_job_action_mask, self.legal_actions[-1]).astype(self.legal_actions.dtype) # Add the no-op
 
-    def _permute_instance_matrix(self, permutation_mode):
-        # Permutes the instance matrix at random and returns the permuted instance 
-        # together with the permutation matrix and permutation indices to repeat the process.
-        
-        if permutation_mode == "random":
+            return np.asarray(permuted_legal_action)
+        else:
+            return np.asarray(self.legal_actions)
+
+    def _enable_permutation_mode(self):
+        # Just setting self.perm_indices for later use
+        if self.permutation_mode == "random":
             # Case: "random" - permute the instance matrix at random
-            self.instance_matrix, self.perm_indices = PermutationHandler.permute(self.original_instance_matrix)
-        elif permutation_mode.find("transpose") != -1:
+            _, self.perm_indices = PermutationHandler.permute(self.original_instance_matrix)
+            self.instance_matrix = np.copy(self.original_instance_matrix)
+            #self.jobs_length = PermutationHandler.permute(self.original_instance_matrix)
+        elif self.permutation_mode.find("transpose") != -1:
             # Case: "transpose" - permute the instance matrix by transposing it with n_swaps
-            n_swaps = int(permutation_mode.split("=")[1])
-            self.instance_matrix, self.perm_indices = PermutationHandler.transpose(self.original_instance_matrix, n_swaps)
+            n_swaps = int(self.permutation_mode.split("=")[1])
+            _, self.perm_indices = PermutationHandler.transpose(self.original_instance_matrix, n_swaps)
+            self.instance_matrix = np.copy(self.original_instance_matrix)
+    
+    def caller_name(self,skip=2):
+        """Get a name of a caller in the format module.class.method
 
-    def _permute_jobs_length(self):
-        self.jobs_length, _ = PermutationHandler.permute(self.original_jobs_length, self.perm_indices)
+        `skip` specifies how many levels of stack to skip while getting caller
+        name. skip=1 means "who calls me", skip=2 "who calls my caller" etc.
+
+        An empty string is returned if skipped levels exceed stack height
+        """
+        stack = inspect.stack()
+        start = 0 + skip
+        if len(stack) < start + 1:
+            return ''
+        parentframe = stack[start][0]    
+
+        name = []
+        module = inspect.getmodule(parentframe)
+        # `modname` can be None when frame is executed directly in console
+        # TODO(techtonik): consider using __main__
+        if module:
+            name.append(module.__name__)
+        # detect classname
+        if 'self' in parentframe.f_locals:
+            # I don't know any way to detect call from the object method
+            # XXX: there seems to be no way to detect static method call - it will
+            #      be just a function call
+            name.append(parentframe.f_locals['self'].__class__.__name__)
+        codename = parentframe.f_code.co_name
+        if codename != '<module>':  # top level usually
+            name.append( codename ) # function or a method
+
+        ## Avoid circular refs and frame leaks
+        #  https://docs.python.org/2.7/library/inspect.html#the-interpreter-stack
+        del parentframe, stack
+
+        return ".".join(name)
 
     def reset(self):
-        #print("Resetting the environment...")
+        print("Resetting the environment...")
+        #print(self.caller_name())
+        #####################################
+        # Check for permutation or transposition
+        #####################################
         if self.permutation_mode is not None:
-            self._permute_instance_matrix(permutation_mode=self.permutation_mode)
-            #self._permute_jobs_length()
-            #self.jobs_length = np.copy(self.original_jobs_length)
+            print(f"Permutation mode is enabled: {self.permutation_mode}")
+            self._enable_permutation_mode()
+            #self.instance_matrix = np.copy(self.original_instance_matrix)
         else:
             self.instance_matrix = np.copy(self.original_instance_matrix)
             self.jobs_length = np.copy(self.original_jobs_length)
@@ -313,6 +377,14 @@ class JssEnv(gym.Env):
 
     def step(self, action: int):
         reward = 0.0
+        original_action = action
+        #####################################
+        # Check for permutation or transposition
+        #####################################
+        if self.permutation_mode is not None:
+            
+            action = PermutationHandler.get_inverse_permuted_action_index(original_action, self.perm_indices)
+            #print(f"Taking action {original_action} from the agent and permute it to {action}....")
 
         # Taking the last job? Is that the no-op?
         if action == self.jobs:

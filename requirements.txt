@@ -13,3 +13,6 @@ pytest
 pytest-sugar
 pytest-cov
 sympy
+sklearn
+torchvision
+tqdm

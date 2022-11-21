@@ -2,7 +2,7 @@ from typing import Dict, Any
 import numpy as np
 from stable_baselines3.common.vec_env import DummyVecEnv
 from src.envs.JobShopEnv.envs.JssEnv import JssEnv
-from src.old_utils import make_env, evaluate_policy_with_makespan
+from src.old_utils import make_env, evaluate_policy_with_makespan, evaluate_policy_with_makespan_single_env
 from src.models import MaskablePPOPermutationHandler
 
 
@@ -22,7 +22,8 @@ class ExperienceCollector:
         self.episodes = []
 
     def _create_env(self, instance_name, permutation_mode):
-        return DummyVecEnv([make_env('jss-v1', 2, 456, instance_name=instance_name, permutation_mode=permutation_mode)])
+        return make_env('jss-v1', 2, 456, instance_name=instance_name, permutation_mode=permutation_mode)()
+        #return DummyVecEnv([make_env('jss-v1', 2, 456, instance_name=instance_name, permutation_mode=permutation_mode)])
          
     def _create_model(self, model_path, env):
         return MaskablePPOPermutationHandler(model_path=model_path, env=env, print_system_info=None)
@@ -46,20 +47,25 @@ class ExperienceCollector:
         #pprint.pprint(f"Printing _locals: {_locals}")
         #pprint.pprint(f"Printing _locals: {_globals}")
         # What we want to collect: states, actions, rewards, dones, infos
-        current_episode = _locals["episode_counts"][0]
-        current_step = _locals["current_lengths"][0]
-        state = _locals["observations"]["real_obs"] 
+        current_episode = _locals["episode_counts"]
+        current_step = _locals["current_lengths"]
+        state_before_step = _locals['observations_before_step']['real_obs']
+        state_after_step = _locals['observations_after_step']['real_obs']
         boolean_action_mask = _locals["action_masks"] # This is a boolean mask
         action = _locals["actions"] # This is the action that was actually taken. Unwrapping?
         reward = _locals["reward"]
         done = _locals["done"]
         makespan = _locals["info"]["makespan"]
 
-        self.states.append(state[0])
-        self.action_masks.append(boolean_action_mask[0])
-        self.actions.append(action[0])
+        #print(f"Observations before step: {state_before_step}" )
+        #print(f"Observations after step: {state_after_step}" )
+
+        self.states.append(state_before_step)
+        self.action_masks.append(boolean_action_mask)
+        self.actions.append(action)
         self.dones.append(done)
         self.episodes.append(current_episode)
+
 
         # Save experiences to file every n episodess
         if (current_episode + 1) % self.save_every_n_episodes == 0 and done:
@@ -87,7 +93,7 @@ class ExperienceCollector:
             print("#       Starting to collect experiences!      #")
             print("###############################################\n")
 
-        mean_reward, std_reward, mean_makespan, std_makespan = evaluate_policy_with_makespan(
+        mean_reward, std_reward, mean_makespan, std_makespan = evaluate_policy_with_makespan_single_env(
         model=self.model, 
         env=self.env, 
         n_eval_episodes=self.n_episodes,
