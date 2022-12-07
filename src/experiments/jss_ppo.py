@@ -8,7 +8,7 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback,
 from src.callbacks.SaveOnBestTrainingRewardCallback import SaveOnBestTrainingRewardCallback
 from src.callbacks.StopTrainingOnMaxEpisodes import StopTrainingOnMaxEpisodes
 from src.callbacks.TensorboardCallback import TensorboardCallback
-from src.utils import make_jobshop_env
+#from src.utils import make_jobshop_env
 from src.envs.JobShopEnv.envs.JssEnv import JssEnv
 from stable_baselines3.common import results_plotter
 from stable_baselines3.common.logger import configure
@@ -102,15 +102,17 @@ def plot_reward_per_episode(log_folder, title='Learning Curve'):
     plt.title(title)
     plt.show()
 
-
-    
-
 ###############################################################
 #                   Create folders and loggers
 ###############################################################
 
-log_dir = "logs/sb3_log/"
-models_dir = "models/jss/PPO"
+
+taillard_instance = "ta41"
+
+
+
+log_dir = f"logs/sb3_log/{taillard_instance}"
+models_dir = f"models/jss/PPO/{taillard_instance}"
 #tensorboard_log = "logs/tensorboard/"
 
 os.makedirs(models_dir, exist_ok=True)
@@ -122,9 +124,9 @@ new_logger = configure(log_dir, ["stdout", "csv", "tensorboard"])
 #                   Create the environment
 ###############################################################
 
-env = make_jobshop_env(rank=0, seed=1, instance_name="taillard/ta41.txt", monitor_log_path=log_dir)
+#env = make_jobshop_env(rank=0, seed=1, instance_name=f"taillard/{taillard_instance}.txt", monitor_log_path=log_dir)
 # required before you can step through the environment
-env.reset()
+#env.reset()
 
 
 ###############################################################
@@ -191,7 +193,8 @@ fig = None
 
 TIMESTEPS = np.inf # Dirty hack to make it run forever
 for i in range(0, 1):
-    env = make_jobshop_env(rank=0, seed=i, instance_name="taillard/ta41.txt", monitor_log_path=log_dir + f"_PPO_{str(i)}_")
+    env = make_env(rank=0, seed=i, instance_name="taillard/{taillard_instance}.txt", monitor_log_path=log_dir + f"_PPO_{str(i)}_")
+    
     model, callback = create_model(
         model_name="MaskablePPO", 
         policy="MlpPolicy", 
@@ -227,13 +230,8 @@ for i in range(0, 1):
 
 env.close()
 log_df.reset_index(inplace=True, drop=True) 
-log_df.to_csv(log_dir + '/reward_log.csv')
+log_df.to_csv(log_dir + f"/{taillard_instance}_reward_log.csv")
 #df = pd.read_csv(log_dir + '/reward_log.csv', index_col=False)
-print(log_df)
-sns.lineplot(x = "episode", y = "reward", data=log_df)
-plt.show()
-
-#fig.show()
-#results_plotter.plot_results([log_dir], None, results_plotter.X_EPISODES, "JOB-SHOP")
+#print(log_df)
+#sns.lineplot(x = "episode", y = "reward", data=log_df)
 #plt.show()
-#plot_vanilla(log_dir)

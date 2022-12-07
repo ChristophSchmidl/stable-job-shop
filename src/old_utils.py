@@ -21,6 +21,15 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv, VecMonitor, is
 from sb3_contrib.common.maskable.utils import get_action_masks, is_masking_supported
 from sb3_contrib.ppo_mask import MaskablePPO
 
+def print_device_info():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Using Pytorch version {torch.__version__} on device {device}")
+    #Additional Info when using cuda
+    if device.type == 'cuda':
+        print(torch.cuda.get_device_name(0))
+        print('Memory Usage:')
+        print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
+        print('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
 
 def enforce_deterministic_behavior():
     # Ensure deterministic behavior
@@ -30,11 +39,15 @@ def enforce_deterministic_behavior():
     torch.manual_seed(hash("by removing stochasticity") % 2**32 - 1)
     torch.cuda.manual_seed_all(hash("so runs are repeatable") % 2**32 - 1)
 
-def get_device():
+def get_device(device=None):
     # Device configuration
     # See also: https://wandb.ai/wandb/common-ml-errors/reports/How-To-Use-GPU-with-PyTorch---VmlldzozMzAxMDk
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    return device
+    if device is None:
+        return torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    if device == 'cpu':
+        return torch.device("cpu")
+    if device == 'gpu':
+        return torch.device("cuda:0")
 
 def get_device_name():
     device = get_device()
@@ -141,6 +154,9 @@ def make_env(env_id, rank=0, seed=0, instance_name="taillard/ta01.txt", permutat
             env = ActionMasker(env, mask_fn)
             #env = JobShopMonitor(env=env, filename=monitor_log_path) # None means, no log file
             #env = VecMonitor(env, monitor_log_path) # None means, no log file
+
+        if monitor_log_path is not None:
+            env = JobShopMonitor(env=env, filename=monitor_log_path) # None means, no log file
 
         return env
 

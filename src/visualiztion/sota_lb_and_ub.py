@@ -47,8 +47,47 @@ def plot_ta41_applied_to_ta42_to_ta50():
     plt.title("Ta41 policy applied to Ta41 - Ta50")
     plt.show()
 
+def plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50():
+    '''
+    Awesome function name :')
+    '''
+    ta41_applied = pd.read_csv('logs/sb3_log/evaluate/evaluate_model_on_instances.csv')
+    dispatching_rules = pd.read_csv("logs/sb3_log/evaluate/evaluate_dispatching_rules_on_30x20_instances.csv")
 
+    merged_makespans = pd.merge(pd.DataFrame(ta41_applied), pd.DataFrame(dispatching_rules), on="instance_name")
+    merged_makespans.drop(merged_makespans.filter(regex="Unname"),axis=1, inplace=True)
 
+    #print(merged_makespans)
+
+    '''
+           instance_name     rewards  makespans  fifo_makespans  mwkr_makespans
+0  taillard/ta41.txt  145.838384     2406.0            2543            2632
+1  taillard/ta42.txt   41.232323     2855.0            2578            2401
+2  taillard/ta43.txt   65.010101     2636.0            2506            2385
+3  taillard/ta44.txt   26.585859     2917.0            2555            2532
+4  taillard/ta45.txt   16.686869     2982.0            2565            2431
+5  taillard/ta46.txt   21.474747     2976.0            2617            2485
+6  taillard/ta47.txt   84.707071     2603.0            2508            2301
+7  taillard/ta48.txt   58.020202     2710.0            2541            2350
+8  taillard/ta49.txt   38.626263     2784.0            2550            2474
+9  taillard/ta50.txt  106.202020     2540.0            2531            2496
+    
+    '''
+    merged_makespans.drop('rewards', axis=1, inplace=True)
+    merged_makespans['instance_name'] = merged_makespans['instance_name'].str.replace('taillard/','').str.replace(".txt", '').str.capitalize()
+
+    ax = merged_makespans.set_index("instance_name").plot(kind="bar", figsize=(10,7))
+    ax.legend(["RL", "FIFO", "MWKR"])
+    ax.set_ylabel("Makespan")
+    ax.set_xlabel("Instance name", rotation="horizontal")
+    ax.set_title("Makespan for RL Ta41 policy, FIFO and MWKR on Taillard instances with 30 jobs and 20 machines")
+
+    fig = ax.get_figure()
+    plt.draw()
+    plt.xticks(rotation="horizontal")
+    fig.savefig("plots/evaluate_dispatching_rules_on_30x20_instances_combined.png", dpi=300)
+    plt.show()
 
 #plot_sota_lb_and_ub()
-plot_ta41_applied_to_ta42_to_ta50()
+#plot_ta41_applied_to_ta42_to_ta50()
+plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50()

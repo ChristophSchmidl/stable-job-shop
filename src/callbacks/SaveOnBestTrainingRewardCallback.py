@@ -13,11 +13,13 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
       It must contains the file created by the ``Monitor`` wrapper.
     :param verbose: (int)
     """
-    def __init__(self, check_freq: int, log_dir: str, model_dir: str, x_axis_type="episodes", verbose=1):
+    def __init__(self, check_freq: int, log_dir: str, model_dir: str, model_filename: str, x_axis_type="episodes", verbose=1):
         super(SaveOnBestTrainingRewardCallback, self).__init__(verbose)
         self.check_freq = check_freq
         self.log_dir = log_dir
-        self.save_path = os.path.join(model_dir, 'best_model')
+        self.model_dir = model_dir
+        self.model_filename = model_filename
+        self.full_filepath = os.path.join(model_dir, model_filename)
         self.best_mean_reward = -np.inf
         self.x_axis_type = x_axis_type # can be 'episodes', 'timesteps' or 'walltime_hrs'
 
@@ -26,8 +28,8 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
 
     def _init_callback(self) -> None:
         # Create folder if needed
-        if self.save_path is not None:
-            os.makedirs(self.save_path, exist_ok=True)
+        if self.model_dir is not None:
+            os.makedirs(self.model_dir, exist_ok=True)
 
     def _on_step(self) -> bool:
         if self.n_calls % self.check_freq == 0:
@@ -46,7 +48,7 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
                   self.best_mean_reward = mean_reward
                   # Example for saving best model
                   if self.verbose > 0:
-                    print(f"Saving new best model to {self.save_path}.zip")
-                  self.model.save(self.save_path)
+                    print(f"Saving new best model to {self.full_filepath}")
+                  self.model.save(self.full_filepath)
 
         return True

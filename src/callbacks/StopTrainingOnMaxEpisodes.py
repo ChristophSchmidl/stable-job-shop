@@ -14,7 +14,6 @@ class StopTrainingOnMaxEpisodes(BaseCallback):
 
     def __init__(self, max_episodes: int, verbose: int = 0):
         super().__init__(verbose=verbose)
-        print("WTF")
         self.max_episodes = max_episodes
         self._total_max_episodes = max_episodes
         self.n_episodes = 0

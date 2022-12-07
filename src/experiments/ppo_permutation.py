@@ -13,18 +13,18 @@ import pprint
 ###############################################################
 
 ENV_ID = 'jss-v1'
-INSTANCE_NAME = "taillard/ta41.txt"
-MODEL_PATH = "models/jss/PPO/best_model_not_tuned_25k.zip"
-PERMUTATION_MODE = True
-N_EPISODES = 3000
-
+TAILLARD_INSTANCE = "ta41"
+INSTANCE_NAME = f"taillard/{TAILLARD_INSTANCE}.txt"
+PERMUTATION_MODE = None
+N_EPISODES = 100
+MODEL_PATH = f"models/jss/PPO/best_model_{TAILLARD_INSTANCE}_not_tuned_{N_EPISODES}_episodes.zip"
 
 ###############################################################
 #                   Create folders and loggers
 ###############################################################
 
 log_dir = "logs/sb3_log/ppo_permutation"
-models_dir = "models/jss/PPO"
+models_dir = MODEL_PATH
 #tensorboard_log = "logs/tensorboard/"
 
 os.makedirs(models_dir, exist_ok=True)
@@ -41,7 +41,7 @@ new_logger = configure(log_dir, ["stdout", "csv", "tensorboard"])
 ###############################################################
 #                   Create the environment
 ###############################################################
-env = DummyVecEnv([make_env(ENV_ID, 2, 456, instance_name = "taillard/ta41.txt", permutation_mode=PERMUTATION_MODE, monitor_log_path=log_dir + f"_PPO_Permutation_")])
+env = DummyVecEnv([make_env(ENV_ID, 2, 456, instance_name = "taillard/{TAILLARD_INSTANCE}.txt", permutation_mode=PERMUTATION_MODE, monitor_log_path=log_dir + f"_PPO_Permutation_")])
 # required before you can step through the environment
 env.reset()
 
