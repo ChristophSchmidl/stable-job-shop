@@ -40,6 +40,24 @@
 
 ![TA41 training - 2500 episodes](plots/2500_episodes/evaluate_policy_ta41_on_30x20_instances.png)
 
+|    | Instance name   | RL makespan |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|------------:|-----------------:|-----------------:|
+|  0 | Ta41            |        2660 |             2543 |             2632 |
+|  1 | Ta42            |        3027 |             2578 |             2401 |
+|  2 | Ta43            |        2579 |             2506 |             2385 |
+|  3 | Ta44            |        3112 |             2555 |             2532 |
+|  4 | Ta45            |        2729 |             2565 |             2431 |
+|  5 | Ta46            |        2961 |             2617 |             2485 |
+|  6 | Ta47            |        3041 |             2508 |             2301 |
+|  7 | Ta48            |        2871 |             2541 |             2350 |
+|  8 | Ta49            |        2787 |             2550 |             2474 |
+|  9 | Ta50            |        2983 |             2531 |             2496 |
+
+
+![TA41 training - 2500 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta41_with_2500_episodes_on_30x20_instances.png)
+
+
+
 
 ### TA42
 
@@ -59,6 +77,22 @@
 ![TA42 training - 2500 episodes](plots/2500_episodes/evaluate_policy_ta42_on_30x20_instances.png)
 
 
+|    | Instance name   | RL makespan |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|------------:|-----------------:|-----------------:|
+|  0 | Ta41            |        2875 |             2543 |             2632 |
+|  1 | Ta42            |        2665 |             2578 |             2401 |
+|  2 | Ta43            |        2910 |             2506 |             2385 |
+|  3 | Ta44            |        2931 |             2555 |             2532 |
+|  4 | Ta45            |        2795 |             2565 |             2431 |
+|  5 | Ta46            |        2871 |             2617 |             2485 |
+|  6 | Ta47            |        2557 |             2508 |             2301 |
+|  7 | Ta48            |        2668 |             2541 |             2350 |
+|  8 | Ta49            |        2849 |             2550 |             2474 |
+|  9 | Ta50            |        2811 |             2531 |             2496 |
+
+
+![TA42 training - 2500 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta42_with_2500_episodes_on_30x20_instances.png)
+
 ### TA43
 
 |    | Instance name   |   RL reward |   RL makespan |
@@ -75,6 +109,22 @@
 |  9 | Ta50            |  46.6061  |        2835 |
 
 ![TA43 training - 2500 episodes](plots/2500_episodes/evaluate_policy_ta43_on_30x20_instances.png)
+
+
+|    | Instance name   | RL makespan |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|------------:|-----------------:|-----------------:|
+|  0 | Ta41            |        3328 |             2543 |             2632 |
+|  1 | Ta42            |        2933 |             2578 |             2401 |
+|  2 | Ta43            |        2810 |             2506 |             2385 |
+|  3 | Ta44            |        2857 |             2555 |             2532 |
+|  4 | Ta45            |        2916 |             2565 |             2431 |
+|  5 | Ta46            |        3076 |             2617 |             2485 |
+|  6 | Ta47            |        3156 |             2508 |             2301 |
+|  7 | Ta48            |        2901 |             2541 |             2350 |
+|  8 | Ta49            |        3024 |             2550 |             2474 |
+|  9 | Ta50            |        2835 |             2531 |             2496 |
+
+![TA43 training - 2500 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta43_with_2500_episodes_on_30x20_instances.png)
 
 ### TA44
 
@@ -94,6 +144,21 @@
 ![TA44 training - 2500 episodes](plots/2500_episodes/evaluate_policy_ta44_on_30x20_instances.png)
 
 
+|    | Instance name   | RL makespan |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|------------:|-----------------:|-----------------:|
+|  0 | Ta41            |        2934 |             2543 |             2632 |
+|  1 | Ta42            |        2623 |             2578 |             2401 |
+|  2 | Ta43            |        2856 |             2506 |             2385 |
+|  3 | Ta44            |        2557 |             2555 |             2532 |
+|  4 | Ta45            |        2691 |             2565 |             2431 |
+|  5 | Ta46            |        2924 |             2617 |             2485 |
+|  6 | Ta47            |        2846 |             2508 |             2301 |
+|  7 | Ta48            |        2931 |             2541 |             2350 |
+|  8 | Ta49            |        2833 |             2550 |             2474 |
+|  9 | Ta50            |        2519 |             2531 |             2496 |
+
+![TA44 training - 2500 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta44_with_2500_episodes_on_30x20_instances.png)
+
 ### TA45
 
 |    | Instance name   |   RL reward |   RL makespan |
@@ -110,6 +175,22 @@
 |  9 | Ta50            |   56.303  |        2787 |
 
 ![TA45 training - 2500 episodes](plots/2500_episodes/evaluate_policy_ta45_on_30x20_instances.png)
+
+|    | Instance name   | RL makespan |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|------------:|-----------------:|-----------------:|
+|  0 | Ta41            |        2768 |             2543 |             2632 |
+|  1 | Ta42            |        2736 |             2578 |             2401 |
+|  2 | Ta43            |        2625 |             2506 |             2385 |
+|  3 | Ta44            |        3115 |             2555 |             2532 |
+|  4 | Ta45            |        2604 |             2565 |             2431 |
+|  5 | Ta46            |        2922 |             2617 |             2485 |
+|  6 | Ta47            |        2798 |             2508 |             2301 |
+|  7 | Ta48            |        2768 |             2541 |             2350 |
+|  8 | Ta49            |        2647 |             2550 |             2474 |
+|  9 | Ta50            |        2787 |             2531 |             2496 |
+
+
+![TA45 training - 2500 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta45_with_2500_episodes_on_30x20_instances.png)
 
 ### TA46
 
@@ -129,6 +210,22 @@
 ![TA46 training - 2500 episodes](plots/2500_episodes/evaluate_policy_ta46_on_30x20_instances.png)
 
 
+|    | Instance name   | RL makespan |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|------------:|-----------------:|-----------------:|
+|  0 | Ta41            |        3012 |             2543 |             2632 |
+|  1 | Ta42            |        2984 |             2578 |             2401 |
+|  2 | Ta43            |        2790 |             2506 |             2385 |
+|  3 | Ta44            |        2959 |             2555 |             2532 |
+|  4 | Ta45            |        3120 |             2565 |             2431 |
+|  5 | Ta46            |        2762 |             2617 |             2485 |
+|  6 | Ta47            |        2686 |             2508 |             2301 |
+|  7 | Ta48            |        2717 |             2541 |             2350 |
+|  8 | Ta49            |        2773 |             2550 |             2474 |
+|  9 | Ta50            |        2621 |             2531 |             2496 |
+
+
+![TA46 training - 2500 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta46_with_2500_episodes_on_30x20_instances.png)
+
 ### TA47
 
 |    | Instance name   |   RL reward |   RL makespan |
@@ -145,6 +242,23 @@
 |  9 | Ta50            |   9.23232 |        3020 |
 
 ![TA47 training - 2500 episodes](plots/2500_episodes/evaluate_policy_ta47_on_30x20_instances.png)
+
+
+|    | Instance name   | RL makespan |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|------------:|-----------------:|-----------------:|
+|  0 | Ta41            |        2982 |             2543 |             2632 |
+|  1 | Ta42            |        2628 |             2578 |             2401 |
+|  2 | Ta43            |        2667 |             2506 |             2385 |
+|  3 | Ta44            |        3163 |             2555 |             2532 |
+|  4 | Ta45            |        2799 |             2565 |             2431 |
+|  5 | Ta46            |        2934 |             2617 |             2485 |
+|  6 | Ta47            |        2462 |             2508 |             2301 |
+|  7 | Ta48            |        2989 |             2541 |             2350 |
+|  8 | Ta49            |        2800 |             2550 |             2474 |
+|  9 | Ta50            |        3020 |             2531 |             2496 |
+
+
+![TA47 training - 2500 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta47_with_2500_episodes_on_30x20_instances.png)
 
 ### TA48
 
@@ -163,6 +277,22 @@
 
 ![TA48 training - 2500 episodes](plots/2500_episodes/evaluate_policy_ta48_on_30x20_instances.png)
 
+|    | Instance name   | RL makespan |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|------------:|-----------------:|-----------------:|
+|  0 | Ta41            |        2754 |             2543 |             2632 |
+|  1 | Ta42            |        3016 |             2578 |             2401 |
+|  2 | Ta43            |        2706 |             2506 |             2385 |
+|  3 | Ta44            |        2804 |             2555 |             2532 |
+|  4 | Ta45            |        2818 |             2565 |             2431 |
+|  5 | Ta46            |        2951 |             2617 |             2485 |
+|  6 | Ta47            |        2880 |             2508 |             2301 |
+|  7 | Ta48            |        2641 |             2541 |             2350 |
+|  8 | Ta49            |        2793 |             2550 |             2474 |
+|  9 | Ta50            |        2537 |             2531 |             2496 |
+
+![TA48 training - 2500 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta48_with_2500_episodes_on_30x20_instances.png)
+
+
 ### TA49
 
 |    | Instance name   |   RL reward |   RL makespan |
@@ -180,6 +310,22 @@
 
 ![TA49 training - 2500 episodes](plots/2500_episodes/evaluate_policy_ta49_on_30x20_instances.png)
 
+|    | Instance name   | RL makespan |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|------------:|-----------------:|-----------------:|
+|  0 | Ta41            |        3172 |             2543 |             2632 |
+|  1 | Ta42            |        2748 |             2578 |             2401 |
+|  2 | Ta43            |        2889 |             2506 |             2385 |
+|  3 | Ta44            |        2793 |             2555 |             2532 |
+|  4 | Ta45            |        3096 |             2565 |             2431 |
+|  5 | Ta46            |        2911 |             2617 |             2485 |
+|  6 | Ta47            |        2778 |             2508 |             2301 |
+|  7 | Ta48            |        2809 |             2541 |             2350 |
+|  8 | Ta49            |        2647 |             2550 |             2474 |
+|  9 | Ta50            |        2823 |             2531 |             2496 |
+
+![TA49 training - 2500 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta49_with_2500_episodes_on_30x20_instances.png)
+
+
 ### TA50
 
 |    | Instance name   |   RL reward |   RL makespan |
@@ -196,3 +342,18 @@
 |  9 | Ta50            | 117.313   |        2485 |
 
 ![TA50 training - 2500 episodes](plots/2500_episodes/evaluate_policy_ta50_on_30x20_instances.png)
+
+|    | Instance name   | RL makespan |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|------------:|-----------------:|-----------------:|
+|  0 | Ta41            |        2770 |             2543 |             2632 |
+|  1 | Ta42            |        2874 |             2578 |             2401 |
+|  2 | Ta43            |        2739 |             2506 |             2385 |
+|  3 | Ta44            |        2908 |             2555 |             2532 |
+|  4 | Ta45            |        2892 |             2565 |             2431 |
+|  5 | Ta46            |        2769 |             2617 |             2485 |
+|  6 | Ta47            |        2869 |             2508 |             2301 |
+|  7 | Ta48            |        3020 |             2541 |             2350 |
+|  8 | Ta49            |        2780 |             2550 |             2474 |
+|  9 | Ta50            |        2485 |             2531 |             2496 |
+
+![TA50 training - 2500 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta50_with_2500_episodes_on_30x20_instances.png)
