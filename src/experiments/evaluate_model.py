@@ -13,8 +13,7 @@ from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 from src.wrappers import JobShopMonitor
 #from sb3_contrib.common.maskable.evaluation import evaluate_policy
 from src.models import MaskablePPOPermutationHandler
-from src.old_utils import evaluate_policy_with_makespan_single_env, make_env
-
+from src.old_utils import evaluate_policy_with_makespan_single_env, make_env, evaluate_policy_with_makespan
 
 
 
@@ -22,10 +21,15 @@ from src.old_utils import evaluate_policy_with_makespan_single_env, make_env
 #                           Globals
 ###############################################################
 
+# TODO: add loop to test all instances with all models
+
 ENV_ID = 'jss-v1'
-INSTANCE_NAME = "taillard/ta41.txt"
-MODEL_PATH = "models/jss/PPO/best_model_not_tuned_25k.zip"
-PERMUTATION_MODE = True
+TAILLARD_INSTANCE = "ta50"
+INSTANCE_NAME = f"taillard/{TAILLARD_INSTANCE}.txt"
+MODEL_NAME = "best_model_ta50_not_tuned_2500_episodes.zip"
+MODEL_DIR = "models/jss/PPO"
+MODEL_PATH = os.path.join(MODEL_DIR, MODEL_NAME)
+PERMUTATION_MODE = None
 N_EPISODES = 3000
 EVAL_INSTANCES = [f"taillard/ta{i}.txt" for i in range(41,51)]
 
@@ -71,11 +75,11 @@ def evaluate_model_on_instances(instances):
 
     for instance in instances:
         
-        env = make_env(ENV_ID, 2, 456, instance_name = instance, permutation_mode=None, monitor_log_path=log_dir + f"_PPO_Permutation_")()
+        env = make_env(ENV_ID, 0, 0, instance_name = instance, permutation_mode=None, monitor_log_path=None)()
         env.reset()
 
         model = MaskablePPOPermutationHandler(model_path=MODEL_PATH, env=env, print_system_info=None)
-        mean_reward, std_reward, mean_makespan, std_makespan = evaluate_policy_with_makespan_single_env(model, env, n_eval_episodes=1, deterministic=True)
+        mean_reward, std_reward, mean_makespan, std_makespan = evaluate_policy_with_makespan(model, env, n_eval_episodes=1, deterministic=True, use_masking=True)
 
         rewards_and_makespans["instance_name"].append(instance)
         rewards_and_makespans["rewards"].append(mean_reward)
@@ -89,9 +93,19 @@ def evaluate_model_on_instances(instances):
 rewards_and_makespans = evaluate_model_on_instances(EVAL_INSTANCES)
 
 df = pd.DataFrame.from_dict(rewards_and_makespans)
-df.to_csv("logs/sb3_log/evaluate/evaluate_model_on_instances.csv")
+df.to_csv(f"logs/sb3_log/evaluate/evaluate_model_{MODEL_NAME}_on_all_instances.csv")
 
-df.set_index("instance_name").plot(kind="bar")
+df['instance_name'] = df['instance_name'].str.replace('taillard/','').str.replace(".txt", '').str.capitalize()
+ax = df.set_index("instance_name").plot(kind="bar", figsize=(10,7))
+ax.legend(["Reward", "Makespan"], loc="upper right")
+ax.set_ylabel("Reward and makespan")
+ax.set_xlabel("Instance name", rotation="horizontal")
+ax.set_title(f"Makespan and reward for RL {TAILLARD_INSTANCE.capitalize()} policy applied to Taillard instances with 30 jobs and 20 machines")
+fig = ax.get_figure()
+#plt.draw()
+plt.xticks(rotation="horizontal")
+fig.savefig(f"plots/2500_episodes/evaluate_policy_{TAILLARD_INSTANCE}_on_30x20_instances.png", dpi=300)
+print(df.to_markdown())
 plt.show()
 
 

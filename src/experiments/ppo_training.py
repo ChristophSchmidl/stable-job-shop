@@ -14,18 +14,21 @@ from src.io.jobshoploader import JobShopLoader
 from src.old_utils import make_env, evaluate_policy_with_makespan
 from src.callbacks.SaveOnBestTrainingRewardCallback import SaveOnBestTrainingRewardCallback
 from src.callbacks.StopTrainingOnMaxEpisodes import StopTrainingOnMaxEpisodes
+from src.old_utils import print_device_info, get_device
 import pprint
 
 ###############################################################
 #                           Globals
 ###############################################################
+print_device_info()
 
-VERBOSE = False
+DEVICE = get_device('gpu')
+VERBOSE = True
 ENV_ID = 'jss-v1'
-TAILLARD_INSTANCE = "ta42"
+TAILLARD_INSTANCE = "ta50"
 INSTANCE_NAME = f"taillard/{TAILLARD_INSTANCE}.txt"
 PERMUTATION_MODE = None
-N_EPISODES = 10
+N_EPISODES = 2500
 MODEL_DIR = f"models/jss/PPO"
 MODEL_FILENAME = f"best_model_{TAILLARD_INSTANCE}_not_tuned_{N_EPISODES}_episodes.zip"
 MODEL_FILE = os.path.join(MODEL_DIR, MODEL_FILENAME)
@@ -74,6 +77,7 @@ model = MaskablePPO(
             #clip_range_vf=24,
             #vf_coef=0.9991,
             #policy_kwargs=policy_kwargs,
+            device=DEVICE,
             verbose=VERBOSE, 
             tensorboard_log=TENSORBOARD_LOG_DIR)
 
@@ -98,5 +102,5 @@ log_df.to_csv(LOG_DIR + f"/{TAILLARD_INSTANCE}_reward_log.csv")
 
 #df = pd.read_csv(log_dir + '/reward_log.csv', index_col=False)
 print(log_df)
-sns.lineplot(x = "episode", y = "reward", data=log_df)
-plt.show()
+#sns.lineplot(x = "episode", y = "reward", data=log_df)
+#plt.show()

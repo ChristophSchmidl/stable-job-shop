@@ -17,3 +17,4 @@ sklearn
 torchvision
 tqdm
 plotly
+tabulate
