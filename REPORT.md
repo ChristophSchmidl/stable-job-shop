@@ -1,6 +1,6 @@
 # Permutation-Augmented Job Shop Scheduling
 
-## PPO training without permutation with 2500 episodes
+## PPO policy evaluation without permutation trained on 2500 episodes
 
 
 ### TA41
