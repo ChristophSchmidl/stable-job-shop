@@ -6,7 +6,7 @@
 ### TA41
 
 
-|    | Instance name   |   RL reward |   RL makespans |
+|    | Instance name   |   RL reward |   RL makespan |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |  94.5253  |        2660 |
 |  1 | Ta42            |   6.48485 |        3027 |
@@ -25,7 +25,7 @@
 
 ### TA42
 
-|    | Instance name   |   RL reward |   RL makespans |
+|    | Instance name   |   RL reward |   RL makespan |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |  51.0909  |        2875 |
 |  1 | Ta42            |  79.6162  |        2665 |
@@ -43,7 +43,7 @@
 
 ### TA43
 
-|    | Instance name   |   RL reward |   RL makespans |
+|    | Instance name   |   RL reward |   RL makespan |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            | -40.4242  |        3328 |
 |  1 | Ta42            |  25.4747  |        2933 |
@@ -60,7 +60,7 @@
 
 ### TA44
 
-|    | Instance name   |   RL reward |   RL makespans |
+|    | Instance name   |   RL reward |   RL makespan |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |   39.1717 |        2934 |
 |  1 | Ta42            |   88.101  |        2623 |
@@ -78,7 +78,7 @@
 
 ### TA45
 
-|    | Instance name   |   RL reward |   RL makespans |
+|    | Instance name   |   RL reward |   RL makespan |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |   72.7071 |        2768 |
 |  1 | Ta42            |   65.2727 |        2736 |
@@ -95,7 +95,7 @@
 
 ### TA46
 
-|    | Instance name   |   RL reward |   RL makespans |
+|    | Instance name   |   RL reward |   RL makespan |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |   23.4141 |        3012 |
 |  1 | Ta42            |   15.1717 |        2984 |
@@ -113,7 +113,7 @@
 
 ### TA47
 
-|    | Instance name   |   RL reward |   RL makespans |
+|    | Instance name   |   RL reward |   RL makespan |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |  29.4747  |        2982 |
 |  1 | Ta42            |  87.0909  |        2628 |
@@ -130,7 +130,7 @@
 
 ### TA48
 
-|    | Instance name   |   RL reward |   RL makespans |
+|    | Instance name   |   RL reward |   RL makespan |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |  75.5354  |        2754 |
 |  1 | Ta42            |   8.70707 |        3016 |
@@ -147,7 +147,7 @@
 
 ### TA49
 
-|    | Instance name   |   RL reward |   RL makespans |
+|    | Instance name   |   RL reward |   RL makespan |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |  -8.90909 |        3172 |
 |  1 | Ta42            |  62.8485  |        2748 |
@@ -164,7 +164,7 @@
 
 ### TA50
 
-|    | Instance name   |   RL reward |   RL makespans |
+|    | Instance name   |   RL reward |   RL makespan |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |  72.303   |        2770 |
 |  1 | Ta42            |  37.3939  |        2874 |
