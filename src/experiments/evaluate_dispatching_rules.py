@@ -44,7 +44,7 @@ merged_makespans = pd.merge(pd.DataFrame(fifo_makespans), pd.DataFrame(mwkr_make
 merged_makespans.to_csv("logs/sb3_log/evaluate/evaluate_dispatching_rules_on_30x20_instances.csv")
 
 # Replace instance_names with just the instance number and without suffix
-merged_makespans['instance_name'] = merged_makespans['instance_name'].str.replace('taillard/','').str.replace('.txt','')
+merged_makespans['instance_name'] = merged_makespans['instance_name'].str.replace('taillard/','').str.replace('.txt','').str.capitalize()
 
 
 ax = merged_makespans.set_index("instance_name").plot(kind="bar", figsize=(10,7))
@@ -54,5 +54,7 @@ ax.set_xlabel("Instance name")
 ax.set_title("Makespan for FIFO and MWKR on Taillard instances with 30 jobs and 20 machines")
 
 fig = ax.get_figure()
+plt.xticks(rotation="horizontal")
+print(merged_makespans.to_markdown())
 fig.savefig("plots/evaluate_dispatching_rules_on_30x20_instances.png", dpi=300)
 plt.show()

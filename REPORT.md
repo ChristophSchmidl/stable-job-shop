@@ -1,12 +1,30 @@
 # Permutation-Augmented Job Shop Scheduling
 
+## Dispatching rules evaluation
+
+|    | Instance name   |   FIFO makespan  |   MWKR makespan  |
+|---:|:----------------|-----------------:|-----------------:|
+|  0 | Ta41            |             2543 |             2632 |
+|  1 | Ta42            |             2578 |             2401 |
+|  2 | Ta43            |             2506 |             2385 |
+|  3 | Ta44            |             2555 |             2532 |
+|  4 | Ta45            |             2565 |             2431 |
+|  5 | Ta46            |             2617 |             2485 |
+|  6 | Ta47            |             2508 |             2301 |
+|  7 | Ta48            |             2541 |             2350 |
+|  8 | Ta49            |             2550 |             2474 |
+|  9 | Ta50            |             2531 |             2496 |
+
+![Dispatching rules evaluation](plots/evaluate_dispatching_rules_on_30x20_instances.png)
+
+
 ## PPO policy evaluation without permutation trained on 2500 episodes
 
 
 ### TA41
 
 
-|    | Instance name   |   RL reward |   RL makespan |
+|    | Instance name   |   RL reward |   RL makespan | 
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |  94.5253  |        2660 |
 |  1 | Ta42            |   6.48485 |        3027 |
