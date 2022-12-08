@@ -5,7 +5,8 @@
 
 ### TA41
 <p float="left">
-  <div>|    | instance_name   |   rewards |   makespans |
+  <div>
+|    | instance_name   |   rewards |   makespans |
 |---:|:----------------|----------:|------------:|
 |  0 | Ta41            |  94.5253  |        2660 |
 |  1 | Ta42            |   6.48485 |        3027 |
@@ -16,7 +17,8 @@
 |  6 | Ta47            |  -3.77778 |        3041 |
 |  7 | Ta48            |  25.4949  |        2871 |
 |  8 | Ta49            |  38.0202  |        2787 |
-|  9 | Ta50            |  16.7071  |        2983 | </div>
+|  9 | Ta50            |  16.7071  |        2983 | 
+</div>
   <img src="plots/2500_episodes/evaluate_policy_ta41_on_30x20_instances.png" width="100" /> 
 </p>
 
