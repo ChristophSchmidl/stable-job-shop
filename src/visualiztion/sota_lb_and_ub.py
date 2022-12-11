@@ -47,14 +47,17 @@ def plot_ta41_applied_to_ta42_to_ta50():
     plt.title("Ta41 policy applied to Ta41 - Ta50")
     plt.show()
 
-def plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50():
+def plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50(instance_name, episodes):
     '''
     Awesome function name :')
     '''
-    ta41_applied = pd.read_csv('logs/sb3_log/evaluate/evaluate_model_on_instances.csv')
+    model_path = f"logs/sb3_log/evaluate/evaluate_model_best_model_{instance_name}_not_tuned_{episodes}_episodes.zip_on_all_instances.csv"
+
+
+    applied_policy = pd.read_csv(model_path)
     dispatching_rules = pd.read_csv("logs/sb3_log/evaluate/evaluate_dispatching_rules_on_30x20_instances.csv")
 
-    merged_makespans = pd.merge(pd.DataFrame(ta41_applied), pd.DataFrame(dispatching_rules), on="instance_name")
+    merged_makespans = pd.merge(pd.DataFrame(applied_policy), pd.DataFrame(dispatching_rules), on="instance_name")
     merged_makespans.drop(merged_makespans.filter(regex="Unname"),axis=1, inplace=True)
 
     #print(merged_makespans)
@@ -80,14 +83,15 @@ def plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50():
     ax.legend(["RL", "FIFO", "MWKR"])
     ax.set_ylabel("Makespan")
     ax.set_xlabel("Instance name", rotation="horizontal")
-    ax.set_title("Makespan for RL Ta41 policy, FIFO and MWKR on Taillard instances with 30 jobs and 20 machines")
+    ax.set_title(f"Makespan for RL {instance_name.capitalize()} policy, FIFO and MWKR on Taillard instances with 30 jobs and 20 machines")
 
     fig = ax.get_figure()
     plt.draw()
     plt.xticks(rotation="horizontal")
-    fig.savefig("plots/evaluate_dispatching_rules_on_30x20_instances_combined.png", dpi=300)
+    print(merged_makespans.to_markdown())
+    fig.savefig(f"plots/compare_dispatching_rules_to_policy_{instance_name}_with_{episodes}_episodes_on_30x20_instances.png", dpi=300)
     plt.show()
 
 #plot_sota_lb_and_ub()
 #plot_ta41_applied_to_ta42_to_ta50()
-plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50()
+plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50("ta46", "25000")

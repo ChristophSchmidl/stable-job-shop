@@ -24,9 +24,9 @@ from src.old_utils import evaluate_policy_with_makespan_single_env, make_env, ev
 # TODO: add loop to test all instances with all models
 
 ENV_ID = 'jss-v1'
-TAILLARD_INSTANCE = "ta50"
+TAILLARD_INSTANCE = "ta46"
 INSTANCE_NAME = f"taillard/{TAILLARD_INSTANCE}.txt"
-MODEL_NAME = "best_model_ta50_not_tuned_2500_episodes.zip"
+MODEL_NAME = f"best_model_{TAILLARD_INSTANCE}_not_tuned_25000_episodes.zip"
 MODEL_DIR = "models/jss/PPO"
 MODEL_PATH = os.path.join(MODEL_DIR, MODEL_NAME)
 PERMUTATION_MODE = None
@@ -104,7 +104,7 @@ ax.set_title(f"Makespan and reward for RL {TAILLARD_INSTANCE.capitalize()} polic
 fig = ax.get_figure()
 #plt.draw()
 plt.xticks(rotation="horizontal")
-fig.savefig(f"plots/2500_episodes/evaluate_policy_{TAILLARD_INSTANCE}_on_30x20_instances.png", dpi=300)
+fig.savefig(f"plots/25000_episodes/evaluate_policy_{TAILLARD_INSTANCE}_on_30x20_instances.png", dpi=300)
 print(df.to_markdown())
 plt.show()
 
