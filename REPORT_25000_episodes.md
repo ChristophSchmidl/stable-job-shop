@@ -385,3 +385,16 @@
 |  9 | Ta50            |        2370 |             2531 |             2496 |
 
 ![TA50 training - 25000 episodes - with dispatching rules](plots/compare_dispatching_rules_to_policy_ta50_with_25000_episodes_on_30x20_instances.png)
+
+
+
+## Supervised learning evaluation
+
+### No Dropout for 120 epochs
+
+![Supervised learning - 120 epochs - without dropout](plots/compare_dispatching_rl_supervised_ta41_120_epochs_dropout_00.png)
+
+
+### Dropout (0.5) for 120 epochs
+
+![Supervised learning - 120 epochs - with dropout](plots/compare_dispatching_rl_supervised_ta41_120_epochs_dropout_05.png)
