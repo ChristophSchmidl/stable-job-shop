@@ -8,5 +8,9 @@ load_dotenv()
 
 # Get environment variables
 USE_WANDB = os.getenv('USE_WANDB', "False") == "True"
-WANDB_PROJECT_NAME = os.getenv('WANDB_PROJECT_NAME')
+WANDB_PROJECT = os.getenv('WANDB_PROJECT_NAME')
+
+PLOTLY_API_KEY = os.getenv('PLOTLY_API_KEY')
+PLOTLY_USERNAME = os.getenv('PLOTLY_USERNAME')
+
 LOG_LEVEL = os.getenv('LOG_LEVEL')

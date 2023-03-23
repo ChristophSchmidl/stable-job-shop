@@ -13,13 +13,14 @@ import pandas as pd
 import chart_studio
 import chart_studio.plotly as py
 from src.logger import get_logger
-from src.cp.callbacks import WandbOptimalSolutionCallback, OptimalSolutionCallback, JobShopVarArrayAndObjectiveSolutionPrinter
+from src.cp.callbacks import WandbOptimalSolutionCallback, OptimalSolutionCallback, WandbFeasibleSolutionsCallback
 
 class CPJobShopSolver:
     def __init__(self, filename="data/instances/taillard/ta41.txt", logger=None):
         # Load the problem instance
         self.logger = get_logger() if logger is None else logger
         self.jobs_count, self.machines_count, self.jobs_data = self._load_instance(filename)
+        self.filename = filename
         # self.jobs_data.shape: (job_count, machine_count, 2)
         '''
         [
@@ -44,7 +45,7 @@ class CPJobShopSolver:
         # Contains solution dictionary where every key is the index of the machine pointing to an array of tuples
         # with (job_id, task_id, start_time, end_time (start + duration))
         #  Example: {0, [(7,2,84,93)]}
-        self.solution_arr = []
+        self.solution_array = []
         self.solution_found = False
 
         self.fig = None
@@ -196,13 +197,21 @@ class CPJobShopSolver:
         # Initialize a new run
 
         if config.USE_WANDB:
+
             run = wandb.init(
                 project=config.WANDB_PROJECT,
                 notes="CP solver",
                 group="constraint-programming",
-                job_type="",
-                tags=["cp", "baseline"]    
+                job_type=f"CP - {self.instance_name}",
+                tags=["cp", "baseline", f"{self.instance_name}"]    
             )
+
+            wandb.config.update({
+                "instance_path": self.filename, 
+                "max_time": max_time
+            })
+
+
 
         self.solver = cp_model.CpSolver()
 
@@ -210,44 +219,32 @@ class CPJobShopSolver:
             self.solver.parameters.max_time_in_seconds = max_time * 60
 
         if config.USE_WANDB:
-            wandb_callback = WandbOptimalSolutionCallback()
+            wandb_callback = WandbFeasibleSolutionsCallback(self.jobs_data, self.assigned_task_type, self.all_tasks, self.all_machines, self.solution_array)
             status = self.solver.Solve(self.model, wandb_callback)
         else:
-            self.logger.info("Using JobShopVarArrayAndObjectiveSolutionPrinter")
+            status = self.solver.Solve(self.model)
             
-            solution_printer = JobShopVarArrayAndObjectiveSolutionPrinter(
-                self.jobs_data, 
-                self.assigned_task_type, 
-                self.all_tasks, 
-                self.all_machines
-            )
-
-            status = self.solver.Solve(self.model, solution_printer)
 
         if status == cp_model.OPTIMAL:
-        #if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-            if status == cp_model.OPTIMAL:
-                self.logger.info(f"Optimal schedule found with makespan {self.solver.ObjectiveValue()}")
-                self.solution_found = True
-            #elif status == cp_model.FEASIBLE:
-            #    print(f"Feasible schedule found with makespan {self.solver.ObjectiveValue()}")
-            #    self.solution_found = True
+            self.logger.info(f"Optimal schedule found with makespan {self.solver.ObjectiveValue()}")
+            self.solution_found = True
 
-            #assigned_jobs = self._get_assigned_jobs(
-            #    self.jobs_data, 
-            #    self.assigned_task_type, 
-            #    self.all_tasks, 
-            #    self.solver)
+            assigned_jobs = self._get_assigned_jobs(self.jobs_data, self.assigned_task_type, self.all_tasks, self.solver)
+
+            self._add_solution(assigned_jobs, wandb_callback.solution_count()+1, self.solver.ObjectiveValue(), "Optimal")
+
+            # Upload solution artifact to wandb
+            if config.USE_WANDB:
+                self.logger.info(f"Solution array: {self.solution_array}")
+                df = pd.DataFrame(self.solution_array)
+                wandb.log({f"{self.instance_name}_cp_solutions": wandb.Table(dataframe=df)})
 
             #for k, v in assigned_jobs.items():
             #    self.logger.info(f"{k} - {v}")
 
-
             #self.logger.info(f"Assigned jobs: {assigned_jobs}")
             
             #self._print_per_machine_solution(self.all_machines, assigned_jobs)
-            exit()
-          
         else:
             print('No solution found.')
 
@@ -255,18 +252,17 @@ class CPJobShopSolver:
         if config.USE_WANDB:
             run.finish()
 
-        return self.solution_arr
+        return self.solution_array
 
     def save_figure(self, file_path, resolution=300):
         self.fig.savefig(file_path, dpi=resolution)
         plt.close(self.fig)
 
     def create_gantt_chart(self, y_axis="Machine"):
-        username = 'cschmidl' # your username
-        api_key = 'HHCrbjR60TTnhU4mF7HX' # your api key - go to profile > settings > regenerate key
+        username = config.PLOTLY_USERNAME # your username
+        api_key = config.PLOTLY_API_KEY # your api key - go to profile > settings > regenerate key
         chart_studio.tools.set_credentials_file(username=username, api_key=api_key)
         
-
         '''
         y_axis = "Machine" or "Job"
         '''
@@ -276,15 +272,6 @@ class CPJobShopSolver:
             print("Cannot create Gantt chart. Solution array is empty.")
         
         plt.figure()
-
-        '''
-        Dataframe description for solution:
-        |Job|Task|Machine|Start|Finish|Duration|
-
-        #self.solution_arr.append(dict(Job=f"Job {assigned_task.job}", Start=start, Finish=start + duration, Machine=f"Machine {machine}"))
-        '''
-
-
 
         df = pd.DataFrame(self.solution_arr)
         df['Duration'] = df['Finish'] - df['Start']
@@ -330,6 +317,37 @@ class CPJobShopSolver:
             return self.solver.NumConflicts(), self.solver.NumBranches(), self.solver.WallTime()
         else:
             print(f"Cannot get statistics because there was no solution found.")
+
+    def _add_solution(self, assigned_jobs, solution_id, makespan, solution_type):
+        # Create per machine solutions
+        self.logger.info("_add_solution")
+
+        for i, machine in enumerate(self.all_machines):
+            #machine_tasks = []
+            # Sort by starting time.
+            assigned_jobs[machine].sort()
+            machine_id = machine
+
+            for j, assigned_task in enumerate(assigned_jobs[machine_id]):
+                job_id = assigned_task.job
+                task_id = assigned_task.index
+                start = assigned_task.start
+                duration = assigned_task.duration
+                finish = start + duration
+
+                self.solution_array.append(
+                    dict(
+                        Machine=f"{machine_id}", 
+                        Job=f"{job_id}",
+                        Task=f"{task_id}", 
+                        Start=start,
+                        Duration=duration, 
+                        Finish=finish,
+                        Solution_id=solution_id,
+                        Makespan=makespan, 
+                        Solution_type=solution_type
+                    )
+                )
 
 def generate_instance_paths(interval_begin, interval_end):
     return [f'data/instances/taillard/ta{i:02d}.txt' for i in range(interval_begin, interval_end + 1)]

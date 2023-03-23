@@ -123,8 +123,6 @@ if __name__ == '__main__':
         solution_type = args.solution_type
 
         for input_file in input_files:
-            # data/instances/taillard/ta{41,42,43,44,45,46,47,48,49,50}.txt
-            #logger.info(f"Loaded input file: {input_file}")
             cp_solver = CPJobShopSolver(filename=input_file)
             cp_solver.solve(max_time=time_limit)
 
