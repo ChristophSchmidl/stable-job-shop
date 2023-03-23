@@ -1,14 +1,15 @@
 import numpy as np
 
 
-data_dir = "data/experiences"
+data_dir = "data/experiences/test"
 
-data = np.load(f"{data_dir}/experiences_transpose-8_1000-episodes.npz")
-#data = np.load(f"{data_dir}/experiences_no-permutation_10-episodes.npz")
+#data = np.load(f"{data_dir}/experiences_random_100-episodes.npz")
+#data = np.load(f"{data_dir}/experiences_transpose-8_1000-episodes.npz")
+data = np.load(f"{data_dir}/experiences_no-permutation_1000-episodes.npz")
 
-idx = 1
+idx = 0
 
-print(f"State: {data['states'][idx][14]}") # wrong permutation?
+print(f"State: {data['states'][idx]}") # wrong permutation?
 print(data["actions"][idx])
 print(data["action_masks"][idx]) # wrong permutation?
 print(data["dones"][idx])

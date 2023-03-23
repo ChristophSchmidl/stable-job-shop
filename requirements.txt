@@ -18,3 +18,9 @@ torchvision
 tqdm
 plotly
 tabulate
+ipykernel
+jupyterlab
+notebook
+ortools
+chart_studio
+python-dotenv

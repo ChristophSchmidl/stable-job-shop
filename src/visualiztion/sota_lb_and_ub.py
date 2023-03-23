@@ -52,12 +52,18 @@ def plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50(instance_name, e
     Awesome function name :')
     '''
     model_path = f"logs/sb3_log/evaluate/evaluate_model_best_model_{instance_name}_not_tuned_{episodes}_episodes.zip_on_all_instances.csv"
+    supervised_model = f"logs/sb3_log/evaluate/evaluate_model_supervised-with-droput_0_0_120_epochs_on_all_instances.csv"
 
 
     applied_policy = pd.read_csv(model_path)
+    supervised = pd.read_csv(supervised_model)
     dispatching_rules = pd.read_csv("logs/sb3_log/evaluate/evaluate_dispatching_rules_on_30x20_instances.csv")
 
-    merged_makespans = pd.merge(pd.DataFrame(applied_policy), pd.DataFrame(dispatching_rules), on="instance_name")
+    df_applied_policy = pd.DataFrame(applied_policy)
+    df_dispatching_rules = pd.DataFrame(dispatching_rules)
+    df_supervised = pd.DataFrame(supervised)
+
+    merged_makespans = df_applied_policy.merge(df_dispatching_rules, on="instance_name").merge(df_supervised, on="instance_name")
     merged_makespans.drop(merged_makespans.filter(regex="Unname"),axis=1, inplace=True)
 
     #print(merged_makespans)
@@ -77,21 +83,24 @@ def plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50(instance_name, e
     
     '''
     merged_makespans.drop('rewards', axis=1, inplace=True)
+    merged_makespans.drop('supervised_rewards', axis=1, inplace=True)
     merged_makespans['instance_name'] = merged_makespans['instance_name'].str.replace('taillard/','').str.replace(".txt", '').str.capitalize()
 
+    print(merged_makespans)
+
     ax = merged_makespans.set_index("instance_name").plot(kind="bar", figsize=(10,7))
-    ax.legend(["RL", "FIFO", "MWKR"])
+    ax.legend(["RL", "FIFO", "MWKR", "Supervised (No Dropout)"])
     ax.set_ylabel("Makespan")
     ax.set_xlabel("Instance name", rotation="horizontal")
-    ax.set_title(f"Makespan for RL {instance_name.capitalize()} policy, FIFO and MWKR on Taillard instances with 30 jobs and 20 machines")
+    ax.set_title(f"Makespan for RL {instance_name.capitalize()} policy, FIFO, MWKR and Supervised on Taillard instances with 30 jobs and 20 machines")
 
     fig = ax.get_figure()
     plt.draw()
     plt.xticks(rotation="horizontal")
     print(merged_makespans.to_markdown())
-    fig.savefig(f"plots/compare_dispatching_rules_to_policy_{instance_name}_with_{episodes}_episodes_on_30x20_instances.png", dpi=300)
+    #fig.savefig(f"plots/compare_dispatching_rules_to_policy_{instance_name}_with_{episodes}_episodes_on_30x20_instances.png", dpi=300)
     plt.show()
 
 #plot_sota_lb_and_ub()
 #plot_ta41_applied_to_ta42_to_ta50()
-plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50("ta46", "25000")
+plot_dispatching_rules_next_to_ta41_applied_to_ta42_to_ta50("ta41", "25000")

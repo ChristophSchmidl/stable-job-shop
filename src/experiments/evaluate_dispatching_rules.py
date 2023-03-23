@@ -1,7 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from src.dispatching_rules.FIFO import FIFO_worker
-from src.dispatching_rules.MWKR import MWKR_worker
+from src.dispatching_rules import FIFO_worker, MWKR_worker
 
 ###############################################################
 #                           Globals
@@ -56,5 +55,5 @@ ax.set_title("Makespan for FIFO and MWKR on Taillard instances with 30 jobs and 
 fig = ax.get_figure()
 plt.xticks(rotation="horizontal")
 print(merged_makespans.to_markdown())
-fig.savefig("plots/evaluate_dispatching_rules_on_30x20_instances.png", dpi=300)
+#fig.savefig("plots/evaluate_dispatching_rules_on_30x20_instances.png", dpi=300)
 plt.show()

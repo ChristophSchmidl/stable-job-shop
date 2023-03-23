@@ -1,8 +1,10 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
+from src.utils import get_project_root
 import numpy as np
 import math
+import os
 
 
 class CustomDataset():
@@ -25,7 +27,7 @@ class Ta41Dataset(Dataset):
 
     def __init__(self, file_name="experiences_no-permutation_1000-episodes.npz"):
         # data loading
-        self.data_dir = "data/experiences"
+        self.data_dir = os.path.join(get_project_root(), "data/experiences")  
         self.data = np.load(f"{self.data_dir}/experiences_transpose-8_1000-episodes.npz")
         self.x = torch.from_numpy(self.data["states"])
         self.y = torch.from_numpy(self.data["actions"])

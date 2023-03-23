@@ -4,7 +4,7 @@ from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 from src.models import MaskablePPOPermutationHandler
 from src.envs.JobShopEnv.envs.JssEnv import JssEnv
 from src.io.jobshoploader import JobShopLoader
-from src.old_utils import make_env, evaluate_policy_with_makespan
+from src.utils import make_env, evaluate_policy_with_makespan
 import pprint
 
 

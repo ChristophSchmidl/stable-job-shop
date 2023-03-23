@@ -7,7 +7,7 @@ from stable_baselines3.common.buffers import RolloutBuffer
 from stable_baselines3.common.vec_env import VecEnv
 import numpy as np
 import pprint
-from src.utils.permutation_handler import PermutationHandler
+from src.permutation_handler import PermutationHandler
 
 ###############################################################
 #                       Operation class
@@ -163,9 +163,6 @@ class MaskablePPOPermutationHandler:
       self.model = self._load_model(model_path)
       self._print_permutation_mode()
 
-
-
-
     def reverse_permuted_action_probas(self, actions, perm_matrix):
         original_actions = np.copy(actions)
 
@@ -179,9 +176,6 @@ class MaskablePPOPermutationHandler:
         original_actions[0] = permutation
         return original_actions
 
-
-
-      
     def _load_model(self, model_path):
         #"models/jss/PPO/best_model_not_tuned_25k.zip"
         # CHeck if file exists
@@ -216,7 +210,6 @@ class MaskablePPOPermutationHandler:
         probs = dis.distribution.probs
         probs_np = probs.detach().numpy()
         return probs_np
-
 
     def permute_probas(self, probas, perm_indices):
         '''
@@ -283,6 +276,8 @@ class MaskablePPOPermutationHandler:
 
         #permutation_mode = self.env.get_attr('permutation_mode')[0]
         permutation_mode = self.env.permutation_mode
+
+        #print(f"Permutation mode in PermutationHandler: {permutation_mode}")
         
         if permutation_mode is not None:
             #perm_indices = self.env.get_attr('perm_indices') # To repeat the permuation of the env
@@ -297,13 +292,14 @@ class MaskablePPOPermutationHandler:
             _actions = [PermutationHandler.get_permuted_action_index(_actions, perm_indices)]
             #print(f"Actions after permutation: {_actions}")
 
-        
             #action_probas = self._predict_masked_probas(self.model, observation, action_masks)
             #permuted_action_probas = self.permute_probas(action_probas, perm_indices)
             #_actions = [np.argmax(permuted_action_probas)]
         else:
+            #print(f"Predicting without permutations based on observation: {observation}")
             _actions, _states = self.model.predict(observation, state, episode_start, deterministic, action_masks)
-
+            #print(_states)
+            #print(_actions)
         return _actions, _states
 
 

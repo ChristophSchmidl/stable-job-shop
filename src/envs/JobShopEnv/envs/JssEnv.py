@@ -11,7 +11,7 @@ import sys
 import inspect
 
 from src.io.jobshoploader import JobShopLoader
-from src.utils.permutation_handler import PermutationHandler
+from src.permutation_handler import PermutationHandler
 
 
 class JssEnv(gym.Env):
@@ -40,7 +40,7 @@ class JssEnv(gym.Env):
         if env_config is None:
             #env_config = {'instance_path': str(Path(__file__).parent.absolute()) + '/instances/ta80'}
             env_config={'instance_path': f"./data/instances/taillard/ta41.txt"}
-            env_config={'permutation_mode': False}
+            env_config={'permutation_mode': None}
 
 
         instance_path = env_config['instance_path']
@@ -191,9 +191,10 @@ class JssEnv(gym.Env):
                 "action_mask": self.get_legal_actions(),
             }
         else:
-            self.state[:, 0] = self.get_legal_actions()[:-1]
+            state = self.state.copy()
+            state[:, 0] = self.get_legal_actions()[:-1]
             return {
-                "real_obs": self.state,
+                "real_obs": state,
                 "action_mask": self.get_legal_actions(),
             }
 
@@ -209,7 +210,7 @@ class JssEnv(gym.Env):
 
             return np.asarray(permuted_legal_action)
         else:
-            return np.asarray(self.legal_actions)
+            return np.asarray(np.copy(self.legal_actions))
 
     def _enable_permutation_mode(self):
         # Just setting self.perm_indices for later use
@@ -271,6 +272,7 @@ class JssEnv(gym.Env):
             self._enable_permutation_mode()
             #self.instance_matrix = np.copy(self.original_instance_matrix)
         else:
+            print(f"Permutation mode is disabled: {self.permutation_mode}")
             self.instance_matrix = np.copy(self.original_instance_matrix)
             self.jobs_length = np.copy(self.original_jobs_length)
 

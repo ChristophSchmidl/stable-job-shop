@@ -47,6 +47,7 @@ class ExperienceCollector:
         #pprint.pprint(f"Printing _locals: {_locals}")
         #pprint.pprint(f"Printing _locals: {_globals}")
         # What we want to collect: states, actions, rewards, dones, infos
+        #print(_locals)
         current_episode = _locals["episode_counts"]
         current_step = _locals["current_lengths"]
         state_before_step = _locals['observations_before_step']['real_obs']
@@ -56,9 +57,6 @@ class ExperienceCollector:
         reward = _locals["reward"]
         done = _locals["done"]
         makespan = _locals["info"]["makespan"]
-
-        #print(f"Observations before step: {state_before_step}" )
-        #print(f"Observations after step: {state_after_step}" )
 
         self.states.append(state_before_step)
         self.action_masks.append(boolean_action_mask)
