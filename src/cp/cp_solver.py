@@ -225,13 +225,14 @@ class CPJobShopSolver:
             status = self.solver.Solve(self.model)
             
 
-        if status == cp_model.OPTIMAL:
-            self.logger.info(f"Optimal schedule found with makespan {self.solver.ObjectiveValue()}")
+        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+            status_as_string = "Optimal" if status == cp_model.OPTIMAL else "Feasible"
+            self.logger.info(f"{status_as_string} Schedule found with makespan {self.solver.ObjectiveValue()}")
             self.solution_found = True
 
             assigned_jobs = self._get_assigned_jobs(self.jobs_data, self.assigned_task_type, self.all_tasks, self.solver)
 
-            self._add_solution(assigned_jobs, wandb_callback.solution_count()+1, self.solver.ObjectiveValue(), "Optimal")
+            self._add_solution(assigned_jobs, wandb_callback.solution_count()+1, self.solver.ObjectiveValue(), status_as_string)
 
             # Upload solution artifact to wandb
             if config.USE_WANDB:

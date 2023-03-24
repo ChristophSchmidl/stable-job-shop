@@ -66,7 +66,7 @@ class CustomParser():
         self.parser_cp_command.add_argument('--input_files', metavar='FILE', nargs='+', 
             help='Input files to process')
         self.parser_cp_command.add_argument('--time_limit', type=int, default=0, 
-            help='Time limit in seconds that the cp solver gets for solving a problem. Default is 0.')
+            help='Time limit in minutes that the cp solver gets for solving a problem. Default is 0.')
         self.parser_cp_command.add_argument('--solution_type', type=str.lower, 
             action="store", choices=["feasible, optimal, all"], default="optimal", 
             help='Solution type that the cp solver should return Default it optimal.')
