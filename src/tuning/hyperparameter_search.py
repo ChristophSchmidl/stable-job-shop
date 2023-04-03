@@ -98,7 +98,7 @@ def train_agent_single_env(config, input_file):
             max_grad_norm = config["max_grad_norm"], # default is max_grad_norm
             target_kl = None, # default is None
             tensorboard_log = None, # default is None
-            create_eval_env = False, # default is False
+            #create_eval_env = False, # default is False
             policy_kwargs = None, # default is None
             verbose = 1, # default is 0
             seed = None, # default is None
@@ -173,7 +173,7 @@ def train_agent_multi_env(config, n_envs, input_file):
             max_grad_norm = config["max_grad_norm"], # default is max_grad_norm
             target_kl = None, # default is None
             tensorboard_log = None, # default is None
-            create_eval_env = False, # default is False
+            #create_eval_env = False, # default is False
             policy_kwargs = None, # default is None
             verbose = 1, # default is 0
             seed = None, # default is None
