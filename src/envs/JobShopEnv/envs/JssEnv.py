@@ -97,9 +97,9 @@ class JssEnv(gym.Env):
         self.jobs = loaded_instance.job_count # Total number of jobs
         self.machines = loaded_instance.machine_count # Total number of machines
         # matrix which stores tuples of (machine, length of the job)
-        self.original_instance_matrix = np.zeros((self.jobs, self.machines), dtype=(np.int_, 2))
+        self.original_instance_matrix = np.zeros((self.jobs, self.machines), dtype=(int, 2))
         # contains all the time to complete jobs
-        self.original_jobs_length = np.zeros(self.jobs, dtype=np.int_)
+        self.original_jobs_length = np.zeros(self.jobs, dtype=int)
         self.max_time_op = loaded_instance.get_max_processing_time() # Check if the operation time is the max operation time
         self.sum_op = loaded_instance.get_horizon() # Sum of all operations
         
@@ -124,9 +124,9 @@ class JssEnv(gym.Env):
             if line_cnt == 1:
                 self.jobs, self.machines = int(split_data[0]), int(split_data[1])
                 # matrix which stores tuples of (machine, length of the job)
-                self.instance_matrix = np.zeros((self.jobs, self.machines), dtype=(np.int_, 2))
+                self.instance_matrix = np.zeros((self.jobs, self.machines), dtype=(int, 2))
                 # contains all the time to complete jobs
-                self.jobs_length = np.zeros(self.jobs, dtype=np.int_)
+                self.jobs_length = np.zeros(self.jobs, dtype=int)
             else:
                 # couple (machine, time)
                 assert len(split_data) % 2 == 0 # check if the line is even and contains only (machine, time) couples
@@ -174,7 +174,7 @@ class JssEnv(gym.Env):
         '''
         self.observation_space = gym.spaces.Dict({
             "action_mask": gym.spaces.Box(0, 1, shape=(self.jobs + 1,)),
-            "real_obs": gym.spaces.Box(low=0.0, high=1.0, shape=(self.jobs, 7), dtype=np.float),
+            "real_obs": gym.spaces.Box(low=0.0, high=1.0, shape=(self.jobs, 7), dtype=float),
         })
 
     def _get_current_state_representation(self):
@@ -292,14 +292,14 @@ class JssEnv(gym.Env):
         self.legal_actions = np.ones(self.jobs + 1, dtype=np.bool)
         self.legal_actions[self.jobs] = False
         # used to represent the solution
-        self.solution = np.full((self.jobs, self.machines), -1, dtype=np.int_)
-        self.time_until_available_machine = np.zeros(self.machines, dtype=np.int_)
-        self.time_until_finish_current_op_jobs = np.zeros(self.jobs, dtype=np.int_)
-        self.todo_time_step_job = np.zeros(self.jobs, dtype=np.int_)
-        self.total_perform_op_time_jobs = np.zeros(self.jobs, dtype=np.int_)
-        self.needed_machine_jobs = np.zeros(self.jobs, dtype=np.int_)
-        self.total_idle_time_jobs = np.zeros(self.jobs, dtype=np.int_)
-        self.idle_time_jobs_last_op = np.zeros(self.jobs, dtype=np.int_)
+        self.solution = np.full((self.jobs, self.machines), -1, dtype=int)
+        self.time_until_available_machine = np.zeros(self.machines, dtype=int)
+        self.time_until_finish_current_op_jobs = np.zeros(self.jobs, dtype=int)
+        self.todo_time_step_job = np.zeros(self.jobs, dtype=int)
+        self.total_perform_op_time_jobs = np.zeros(self.jobs, dtype=int)
+        self.needed_machine_jobs = np.zeros(self.jobs, dtype=int)
+        self.total_idle_time_jobs = np.zeros(self.jobs, dtype=int)
+        self.idle_time_jobs_last_op = np.zeros(self.jobs, dtype=int)
         self.illegal_actions = np.zeros((self.machines, self.jobs), dtype=np.bool)
         self.action_illegal_no_op = np.zeros(self.jobs, dtype=np.bool)
         self.machine_legal = np.zeros(self.machines, dtype=np.bool)
@@ -309,7 +309,7 @@ class JssEnv(gym.Env):
             if not self.machine_legal[needed_machine]:
                 self.machine_legal[needed_machine] = True
                 self.nb_machine_legal += 1
-        self.state = np.zeros((self.jobs, 7), dtype=np.float)
+        self.state = np.zeros((self.jobs, 7), dtype=float)
         return self._get_current_state_representation()
 
     def _prioritization_non_final(self):

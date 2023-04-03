@@ -30,7 +30,7 @@ for episode in range(EPISODES):
     machines_available = set() # unordered collection of unique elements
     for job in range(len(env.legal_actions[:-1])): # -1 to exclude the last action: no-op?
         if env.legal_actions[job]:
-            machine_needed = env.needed_machine_jobs[job] # needed_machine_jobs = np.zeros(self.jobs, dtype=np.int_)
+            machine_needed = env.needed_machine_jobs[job] # needed_machine_jobs = np.zeros(self.jobs, dtype=int)
             '''
             env.needed_machine_jobs contains an array of the machines needed for each job.
             This probably changes every time the step() function is called.
