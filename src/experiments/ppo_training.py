@@ -11,10 +11,8 @@ from stable_baselines3.common.callbacks import CallbackList
 from src.models import MaskablePPOPermutationHandler
 from src.envs.JobShopEnv.envs.JssEnv import JssEnv
 from src.io.jobshoploader import JobShopLoader
-from src.old_utils import make_env, evaluate_policy_with_makespan
 from src.callbacks.SaveOnBestTrainingRewardCallback import SaveOnBestTrainingRewardCallback
 from src.callbacks.StopTrainingOnMaxEpisodes import StopTrainingOnMaxEpisodes
-from src.old_utils import print_device_info, get_device
 import pprint
 
 ###############################################################

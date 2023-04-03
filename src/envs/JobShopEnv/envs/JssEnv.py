@@ -97,9 +97,9 @@ class JssEnv(gym.Env):
         self.jobs = loaded_instance.job_count # Total number of jobs
         self.machines = loaded_instance.machine_count # Total number of machines
         # matrix which stores tuples of (machine, length of the job)
-        self.original_instance_matrix = np.zeros((self.jobs, self.machines), dtype=(np.int, 2))
+        self.original_instance_matrix = np.zeros((self.jobs, self.machines), dtype=(np.int_, 2))
         # contains all the time to complete jobs
-        self.original_jobs_length = np.zeros(self.jobs, dtype=np.int)
+        self.original_jobs_length = np.zeros(self.jobs, dtype=np.int_)
         self.max_time_op = loaded_instance.get_max_processing_time() # Check if the operation time is the max operation time
         self.sum_op = loaded_instance.get_horizon() # Sum of all operations
         
@@ -124,9 +124,9 @@ class JssEnv(gym.Env):
             if line_cnt == 1:
                 self.jobs, self.machines = int(split_data[0]), int(split_data[1])
                 # matrix which stores tuples of (machine, length of the job)
-                self.instance_matrix = np.zeros((self.jobs, self.machines), dtype=(np.int, 2))
+                self.instance_matrix = np.zeros((self.jobs, self.machines), dtype=(np.int_, 2))
                 # contains all the time to complete jobs
-                self.jobs_length = np.zeros(self.jobs, dtype=np.int)
+                self.jobs_length = np.zeros(self.jobs, dtype=np.int_)
             else:
                 # couple (machine, time)
                 assert len(split_data) % 2 == 0 # check if the line is even and contains only (machine, time) couples
@@ -292,14 +292,14 @@ class JssEnv(gym.Env):
         self.legal_actions = np.ones(self.jobs + 1, dtype=np.bool)
         self.legal_actions[self.jobs] = False
         # used to represent the solution
-        self.solution = np.full((self.jobs, self.machines), -1, dtype=np.int)
-        self.time_until_available_machine = np.zeros(self.machines, dtype=np.int)
-        self.time_until_finish_current_op_jobs = np.zeros(self.jobs, dtype=np.int)
-        self.todo_time_step_job = np.zeros(self.jobs, dtype=np.int)
-        self.total_perform_op_time_jobs = np.zeros(self.jobs, dtype=np.int)
-        self.needed_machine_jobs = np.zeros(self.jobs, dtype=np.int)
-        self.total_idle_time_jobs = np.zeros(self.jobs, dtype=np.int)
-        self.idle_time_jobs_last_op = np.zeros(self.jobs, dtype=np.int)
+        self.solution = np.full((self.jobs, self.machines), -1, dtype=np.int_)
+        self.time_until_available_machine = np.zeros(self.machines, dtype=np.int_)
+        self.time_until_finish_current_op_jobs = np.zeros(self.jobs, dtype=np.int_)
+        self.todo_time_step_job = np.zeros(self.jobs, dtype=np.int_)
+        self.total_perform_op_time_jobs = np.zeros(self.jobs, dtype=np.int_)
+        self.needed_machine_jobs = np.zeros(self.jobs, dtype=np.int_)
+        self.total_idle_time_jobs = np.zeros(self.jobs, dtype=np.int_)
+        self.idle_time_jobs_last_op = np.zeros(self.jobs, dtype=np.int_)
         self.illegal_actions = np.zeros((self.machines, self.jobs), dtype=np.bool)
         self.action_illegal_no_op = np.zeros(self.jobs, dtype=np.bool)
         self.machine_legal = np.zeros(self.machines, dtype=np.bool)
