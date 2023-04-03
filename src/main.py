@@ -8,6 +8,8 @@ from src.logger import get_logger
 from src.utils import print_device_info, get_device, make_env
 import src.agents as Agents
 from src.cp.cp_solver import CPJobShopSolver
+from src.experiments.dispatching_rules_wandb import execute_fifo_worker, execute_mwkr_worker
+from src.tuning.hyperparameter_search import run_sweep
 
 
 class CustomParser():
@@ -29,9 +31,23 @@ class CustomParser():
         self._add_supervised_parser()
         self._add_reinforcement_parser()
         self._add_constraint_programming_parser()
+        self._add_dispatching_rules_parser()
+        self._add_reinforcement_tuning_parser()
+
         ######################################
 
         self.args = self.main_parser.parse_args()
+
+    def _add_dispatching_rules_parser(self):
+        # create the parser for the "supervised-learning" subcommand
+        self.parser_dr_command = self.subparsers.add_parser('dr', 
+            help='Dispatching rules help.')
+        self.parser_dr_command.add_argument('--input_files', metavar='FILE', nargs='+', 
+            help='Input files to process')
+        self.parser_dr_command.add_argument('--dispatching_rule', type=str.lower, 
+            action="store", choices=["fifo, mwkr, all"], default="all", 
+            help='Which dispatching-rule to choose.')
+        
 
     def _add_supervised_parser(self):
         # create the parser for the "supervised-learning" subcommand
@@ -58,6 +74,22 @@ class CustomParser():
             help='Reinforcement-learning help.')
         self.parser_rl_command.add_argument('--episodes', type=int, default=100, 
             help='Number of episodes to train in reinforcement-learning mode. Default is 100.')
+
+    def _add_reinforcement_tuning_parser(self):
+        # See also: https://wandb.ai/iamleonie/Intro-to-MLOps/reports/Intro-to-MLOps-Hyperparameter-Tuning--VmlldzozMTg2OTk3
+        # create the parser for the "reinforcement-learning" subcommand
+        self.parser_rl_tune_command = self.subparsers.add_parser('rl-tune', 
+            help='Reinforcement-learning hyperparameter tuning help.')
+        self.parser_rl_tune_command.add_argument('--tuning_method', type=str.lower, 
+            action="store", choices=["bayes, grid, random"], default="bayes", 
+            help='Tuning method for wandb sweeps. Default is bayes and cannot be parallelized.')
+        self.parser_rl_tune_command.add_argument('--n_runs', type=int, default=60, 
+            help='Amount of runs to perform for a parameter sweep. Default is 20.')
+        self.parser_rl_tune_command.add_argument('--n_workers', type=int, default=1, 
+            help='Amount of workers to run the experiments in parallel. Can only be used with grid and random tuning method. Default is 1.')
+        self.parser_rl_tune_command.add_argument('--input_file', type=str.lower, default='./data/instances/taillard/ta41.txt',
+                    help='The input_file represents the problem instance to perform hyperparameter tuning. Default is ./data/instances/taillard/ta41.txt')
+        
 
     def _add_constraint_programming_parser(self):
         # create the parser for the "cp" subcommand (constraint programming)
@@ -129,8 +161,21 @@ if __name__ == '__main__':
     if args.command == "rl":
         pass
 
+    if args.command == "rl-tune":
+        
+        method = args.tuning_method
+        n_workers = args.n_workers
+        n_runs = args.n_runs
+        input_file = args.input_file
+
+        run_sweep(tuning_method=method, n_runs=n_runs, n_workers=n_workers, input_file=input_file, project_name="maskable_ppo_hyperparameter_tuning")
+
     if args.command == "sl":
         pass
+
+    if args.command == "dr":
+        execute_fifo_worker(args.input_files)
+        execute_mwkr_worker(args.input_files)
     
             
 

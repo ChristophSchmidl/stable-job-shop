@@ -27,6 +27,7 @@ a4) Total left-over time: The left-over time until total completion
     10. NEH algorithm
 '''
 
+'''
 class GymWrapper:
     def __init__(self, instance_path="taillard/ta41.txt", seed=1337, perm_mode=None):
         self.instance_path = instance_path
@@ -61,11 +62,6 @@ class GymWrapper:
         return wrapper
     
     
-
-
-
-
-
 class Dispatcher:
     def __init__(self, instance_path="taillard/ta41.txt", seed=1337, perm_mode=None):
         self.instance_path = instance_path
@@ -78,7 +74,7 @@ class Dispatcher:
 
     def dispatch(self, rule=)
         
-
+'''
 
 
 def FIFO_worker(instance_name = "taillard/ta41.txt", seed=1337):

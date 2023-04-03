@@ -198,6 +198,13 @@ class JssEnv(gym.Env):
                 "action_mask": self.get_legal_actions(),
             }
 
+    def action_masks(self):
+        '''
+        Just a convenience method, so that you
+        do not have to use an ActionMasker later on
+        '''
+        return self.get_legal_actions
+
     def get_legal_actions(self):
         #####################################
         # Check for permutation or transposition
