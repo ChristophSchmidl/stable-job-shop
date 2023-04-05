@@ -103,7 +103,8 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
 
     print(f"Masking supported on eval_env: {is_masking_supported(eval_env)}")
 
-    policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=[dict(pi=[256, 256, 128], vf=[256, 256, 128])])
+    #policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=[dict(pi=[256, 256, 128], vf=[256, 256, 128])])
+    policy_kwargs = None
 
     # configure the PPO agent
     model = MaskablePPO(
