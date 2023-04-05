@@ -203,7 +203,7 @@ class JssEnv(gym.Env):
         Just a convenience method, so that you
         do not have to use an ActionMasker later on
         '''
-        return self.get_legal_actions
+        return self.get_legal_actions()
 
     def get_legal_actions(self):
         #####################################
@@ -215,9 +215,9 @@ class JssEnv(gym.Env):
             permuted_job_action_mask, _ = PermutationHandler.permute(job_action_mask, self.perm_indices)    
             permuted_legal_action = np.append(permuted_job_action_mask, self.legal_actions[-1]).astype(self.legal_actions.dtype) # Add the no-op
 
-            return np.asarray(permuted_legal_action)
+            return np.asarray(permuted_legal_action, dtype=np.bool)
         else:
-            return np.asarray(np.copy(self.legal_actions))
+            return np.asarray(np.copy(self.legal_actions), dtype=np.bool)
 
     def _enable_permutation_mode(self):
         # Just setting self.perm_indices for later use

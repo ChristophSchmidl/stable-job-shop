@@ -45,7 +45,6 @@ def make_env(env_id, rank=0, seed=0, instance_name="./data/instances/taillard/ta
             env.seed(seed + rank)
         
         if env_id == "jss-v1":
-            pass
             env = ActionMasker(env, mask_fn)
             #env = JobShopMonitor(env=env, filename=monitor_log_path) # None means, no log file
             #env = VecMonitor(env, monitor_log_path) # None means, no log file

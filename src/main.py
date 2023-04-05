@@ -10,6 +10,7 @@ import src.agents as Agents
 from src.cp.cp_solver import CPJobShopSolver
 from src.experiments.dispatching_rules_wandb import execute_fifo_worker, execute_mwkr_worker
 from src.tuning.hyperparameter_search import run_sweep
+from src.experiments.train_ppo_multi_env import train_agent_multi_env
 
 
 class CustomParser():
@@ -74,6 +75,15 @@ class CustomParser():
             help='Reinforcement-learning help.')
         self.parser_rl_command.add_argument('--episodes', type=int, default=100, 
             help='Number of episodes to train in reinforcement-learning mode. Default is 100.')
+        self.parser_rl_command.add_argument('--input_file', type=str.lower, default='./data/instances/taillard/ta41.txt',
+                    help='The input_file represents the problem instance. Default is ./data/instances/taillard/ta41.txt')
+        self.parser_rl_command.add_argument('--time_limit', type=int, default=60, 
+            help='Time limit in seconds. Default is 60.')
+        self.parser_rl_command.add_argument('--config_type', type=int, 
+            action="store", choices=[1,2], default=1, 
+            help='Hyperparameter config for training. Default is 1.')
+        self.parser_rl_command.add_argument('--n_workers', type=int, default=4, 
+            help='Amount of workers to run the experiments in parallel. Default is 4.')
 
     def _add_reinforcement_tuning_parser(self):
         # See also: https://wandb.ai/iamleonie/Intro-to-MLOps/reports/Intro-to-MLOps-Hyperparameter-Tuning--VmlldzozMTg2OTk3
@@ -103,46 +113,6 @@ class CustomParser():
             action="store", choices=["feasible, optimal, all"], default="optimal", 
             help='Solution type that the cp solver should return Default it optimal.')
 
-def parse_arguments():
-    '''
-    Different experiments:
-        1. Supervised learning (train, eval, confusion_matrix, loss, acc, auc)
-            c) plot_path
-            d) model_path
-            e) dataset: no-permutation, random, transpose-{1:15}
-            h) hidden_size
-    '''
-
-
-    # the hyphen makes the argument optional
-    '''
-    parser.add_argument('-gpu', type=str, default='0', help='GPU: 0 or 1. Default is 0.')
-    parser.add_argument('-episodes', type=int, default=150, help='Number of games/episodes to play. Default is 150.')
-    parser.add_argument('-alpha', type=float, default=0.0001, help='Learning rate alpha for the actor network. Default is 0.0001.')
-    parser.add_argument('-beta', type=float, default=0.001, help='Learning rate beta for the critic network. Default is 0.001.')
-    parser.add_argument('-gamma', type=float, default=0.99, help='Discount factor for update equation')
-    parser.add_argument('-tau', type=float, default=0.001, help='Update network parameters. Default is 0.001.')
-    parser.add_argument('-algo', type=str, default='DDPGAgent',
-                    help='You can use the following algorithms: DDPGAgent. Default is DDPGAgent.')
-    parser.add_argument('-buffer_size', type=int, default=1000000, help='Maximum size of memory/replay buffer. Default is 1000000.')
-    parser.add_argument('-batch_size', type=int, default=128, help='Batch size for training. Default is 128.')
-    parser.add_argument('-load_checkpoint', type=bool, default=False,
-                        help='Load model checkpoint/weights. Default is False.')
-    parser.add_argument('-model_path', type=str, default='data/',
-                        help='Path for model saving/loading. Default is data/')
-    parser.add_argument('-plot_path', type=str, default='plots/',
-                        help='Path for saving plots. Default is plots/')
-    parser.add_argument('-save_plot', type=bool, default=True,
-                        help='Save plot of eval or/and training phase. Default is True.')
-
-    parser.add_argument('-multiagent_env', type=bool, default=False,
-                        help='Using the multi agent environment version. Default is False.')
-    parser.add_argument('-visual_env', type=bool, default=False,
-                        help='Using the visual environment. Default is False.')
-    '''
-    
-    #args = parser.parse_args()
-    #return args
 
 if __name__ == '__main__':
     logger = get_logger()
@@ -159,7 +129,53 @@ if __name__ == '__main__':
             cp_solver.solve(max_time=time_limit)
 
     if args.command == "rl":
-        pass
+
+        '''
+        mean_makespan:  2618
+        mean_reward:    103.0101010184735
+        '''
+        hyperparam_config_first = {
+            "clip_range": 0.181648141774528,
+            "ent_coef": 0.0033529692788612023,
+            "gae_lambda": 0.9981645683766052,
+            "gamma": 0.9278778323835192,
+            "learning_rate": 0.001080234067815426,
+            "max_grad_norm": 7.486785910278103,
+            "n_epochs": 7,
+            "n_steps": 731,
+            "total_timesteps": 81947
+        }
+    
+        '''
+        mean_makespan: 2646
+        mean_reward: 97.35353550687432
+        '''
+        hyperparam_config_second = {
+            "clip_range": 0.2515491044924565,
+            "ent_coef": 0.006207990430953167,
+            "gae_lambda": 0.906079003617699,
+            "gamma": 0.9041076240082796,
+            "learning_rate": 0.002069479218298502,
+            "max_grad_norm": 8.578211744760571,
+            "n_epochs": 9,
+            "n_steps": 1544,
+            "total_timesteps": 69457
+        }
+
+        config_type = args.config_type
+        time_limit_in_seconds = args.time_limit
+        n_workers = args.n_workers
+        episodes = args.episodes
+        input_file = args.input_file
+
+        config = None
+        if config_type == 1:
+            config = hyperparam_config_first
+        else:
+            config = hyperparam_config_second
+
+        mean_reward, mean_makespan = train_agent_multi_env(hyperparam_config=config, n_envs=n_workers, input_file=input_file, time_limit_in_seconds=time_limit_in_seconds)
+        print(f"Finished training with mean_reward of {mean_reward} and mean_makespan of {mean_makespan}.")
 
     if args.command == "rl-tune":
         

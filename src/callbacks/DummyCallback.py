@@ -57,6 +57,6 @@ class DummyCallback(BaseCallback):
         """
         This event is triggered before exiting the `learn()` method.
         """
-        #rint("Training ends")
+        #print("Training ends")
         #print(np.mean(self.episode_rewards))
         #self.logger.record('rollout/episode_reward', np.mean(self.episode_rewards))
