@@ -80,7 +80,7 @@ class CustomParser():
         self.parser_rl_command.add_argument('--time_limit', type=int, default=60, 
             help='Time limit in seconds. Default is 60.')
         self.parser_rl_command.add_argument('--config_type', type=int, 
-            action="store", choices=[1,2], default=1, 
+            action="store", choices=[1,2,3,4], default=1, 
             help='Hyperparameter config for training. Default is 1.')
         self.parser_rl_command.add_argument('--n_workers', type=int, default=4, 
             help='Amount of workers to run the experiments in parallel. Default is 4.')
@@ -91,10 +91,12 @@ class CustomParser():
         self.parser_rl_tune_command = self.subparsers.add_parser('rl-tune', 
             help='Reinforcement-learning hyperparameter tuning help.')
         self.parser_rl_tune_command.add_argument('--tuning_method', type=str.lower, 
-            action="store", choices=["bayes, grid, random"], default="bayes", 
+            action="store", choices=["bayes", "grid", "random"], default="bayes", 
             help='Tuning method for wandb sweeps. Default is bayes and cannot be parallelized.')
         self.parser_rl_tune_command.add_argument('--n_runs', type=int, default=60, 
             help='Amount of runs to perform for a parameter sweep. Default is 20.')
+        self.parser_rl_tune_command.add_argument('--max_episodes', type=int, default=30, 
+            help='Amount of episodes per run to perform for a parameter sweep. Default is 30.')
         self.parser_rl_tune_command.add_argument('--n_workers', type=int, default=1, 
             help='Amount of workers to run the experiments in parallel. Can only be used with grid and random tuning method. Default is 1.')
         self.parser_rl_tune_command.add_argument('--input_file', type=str.lower, default='./data/instances/taillard/ta41.txt',
@@ -130,13 +132,47 @@ if __name__ == '__main__':
 
     if args.command == "rl":
 
+        
+        hyperparam_config_tassel_architecture = {
+            "batch_size": 140,
+            "clip_range": 0.5403903472274568,
+            "ent_coef": 0.0006468446031627639,
+            "vf_coef": 0.5229849357873716,
+            "gae_lambda": 0.9248978828624046,
+            "gamma": 0.977158572561722,
+            "learning_rate": 0.005108302278783693,
+            "max_grad_norm": 5.481066781040825,
+            "n_epochs": 14,
+            "n_steps": 107
+        }
+        
+
+
+
+        hyperparam_config_tassel = {
+            "batch_size": 64,
+            "clip_range": 0.541,
+            "ent_coef": 0.496,
+            "vf_coef": 0.7918,
+            "gae_lambda": 0.9981645683766052,
+            "gamma": 0.99,
+            "learning_rate": 0.001080234067815426,
+            "max_grad_norm": 7.486785910278103,
+            "n_epochs": 12,
+            "n_steps": 704
+        }
+
+
+
         '''
         mean_makespan:  2618
         mean_reward:    103.0101010184735
         '''
         hyperparam_config_first = {
+            "batch_size": 64,
             "clip_range": 0.181648141774528,
             "ent_coef": 0.0033529692788612023,
+            "vf_coef": 0.5,
             "gae_lambda": 0.9981645683766052,
             "gamma": 0.9278778323835192,
             "learning_rate": 0.001080234067815426,
@@ -151,8 +187,10 @@ if __name__ == '__main__':
         mean_reward: 97.35353550687432
         '''
         hyperparam_config_second = {
+            "batch_size": 64,
             "clip_range": 0.2515491044924565,
             "ent_coef": 0.006207990430953167,
+            "vf_coef": 0.5,
             "gae_lambda": 0.906079003617699,
             "gamma": 0.9041076240082796,
             "learning_rate": 0.002069479218298502,
@@ -161,6 +199,27 @@ if __name__ == '__main__':
             "n_steps": 1544,
             "total_timesteps": 69457
         }
+
+        '''
+        mean_makespan: 2676
+        mean_reward: 97.35353550687432
+        '''
+        hyperparam_config_third = {
+            "batch_size": 81,
+            "clip_range": 0.4569412545379863,
+            "ent_coef": 0.006403575874592836,
+            "vf_coef": 0.541683487811123,
+            "gae_lambda": 0.9971955082313728,
+            "gamma": 0.9562334910680252,
+            "learning_rate": 0.00004650540613946862,
+            "max_grad_norm": 6.577071418772267,
+            "n_epochs": 22,
+            "n_steps": 990,
+            "total_timesteps": 69457
+        }
+
+
+
 
         config_type = args.config_type
         time_limit_in_seconds = args.time_limit
@@ -171,8 +230,12 @@ if __name__ == '__main__':
         config = None
         if config_type == 1:
             config = hyperparam_config_first
-        else:
+        elif config_type == 2:
             config = hyperparam_config_second
+        elif config_type == 3:
+            config = hyperparam_config_tassel_architecture
+        elif config_type == 4:
+            config = hyperparam_config_third
 
         mean_reward, mean_makespan = train_agent_multi_env(hyperparam_config=config, n_envs=n_workers, input_file=input_file, time_limit_in_seconds=time_limit_in_seconds)
         print(f"Finished training with mean_reward of {mean_reward} and mean_makespan of {mean_makespan}.")
@@ -183,8 +246,9 @@ if __name__ == '__main__':
         n_workers = args.n_workers
         n_runs = args.n_runs
         input_file = args.input_file
+        max_episodes = args.max_episodes
 
-        run_sweep(tuning_method=method, n_runs=n_runs, n_workers=n_workers, input_file=input_file, project_name="maskable_ppo_hyperparameter_tuning")
+        run_sweep(tuning_method=method, n_runs=n_runs, n_workers=n_workers, max_episodes=max_episodes, input_file=input_file, project_name="maskable_ppo_hyperparameter_tuning")
 
     if args.command == "sl":
         pass

@@ -530,17 +530,32 @@ def evaluate_policy_with_makespan(  # noqa: C901
         if render:
             env.render()
 
+    min_reward = np.min(episode_rewards)
+    max_reward = np.max(episode_rewards)
     mean_reward = np.mean(episode_rewards)
     std_reward = np.std(episode_rewards)
 
+    min_makespan = np.min(episodes_makespans)
+    max_makespan = np.max(episodes_makespans)
     mean_makespan = np.mean(episodes_makespans)
     std_makespan = np.std(episodes_makespans)
+
+    metric_dict = {
+        "min_reward": min_reward,
+        "max_reward": max_reward,
+        "mean_reward": mean_reward,
+        "std_reward": std_reward,
+        "min_makespan": min_makespan,
+        "max_makespan": max_makespan,
+        "mean_makespan": mean_makespan,
+        "std_makespan": std_makespan
+    }
 
     if reward_threshold is not None:
         assert mean_reward > reward_threshold, "Mean reward below threshold: " f"{mean_reward:.2f} < {reward_threshold:.2f}"
     if return_episode_rewards:
         return episode_rewards, episode_lengths
-    return mean_reward, std_reward, mean_makespan, std_makespan
+    return metric_dict
 
 
 '''

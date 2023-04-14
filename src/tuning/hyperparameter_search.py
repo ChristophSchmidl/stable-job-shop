@@ -2,7 +2,6 @@ import os
 import random
 import pprint
 import time
-
 import numpy as np
 import gym
 import wandb
@@ -20,7 +19,8 @@ from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
 from src.envs.JobShopEnv.envs.JssEnv import JssEnv
 from stable_baselines3.common.env_util import make_vec_env
 from sb3_contrib.common.maskable.utils import is_masking_supported
-
+from src.callbacks.StopTrainingOnMaxEpisodes import StopTrainingOnMaxEpisodes
+from stable_baselines3.common.callbacks import CallbackList
 from src.utils import evaluate_policy_with_makespan
 
 
@@ -56,82 +56,10 @@ def make_env(env_id, rank=0, seed=0, instance_name="./data/instances/taillard/ta
 
     return _init
 
-
-
-def train_agent_single_env(config, input_file):
+def train_agent(config, n_envs, input_file, max_episodes=30):
     start_time = time.time()
 
-    # Create a gym environment
-    env_name = "jss-v1"
-    instance_name = input_file
-    n_envs = 1
-    rank = 1
-    seed_train = np.random.randint(0, 2**32 - 1, n_envs)
-    seed_eval = np.random.randint(0, 2**32 - 1, n_envs)
-
-
-    env = make_env(env_name, rank=rank, seed=seed_train, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)()
-
-    # Wrap the environment in a VecEnv
-    env = DummyVecEnv([lambda: env])
-
-    # Set up evaluation environment
-    eval_env = make_env(env_name, rank=rank, seed=seed_eval, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)()
-    eval_env = DummyVecEnv([lambda: eval_env])
-
-    # configure the PPO agent
-    model = MaskablePPO(
-            policy='MultiInputPolicy', 
-            env=env, 
-            learning_rate = config["learning_rate"], # default is 3e-4
-            n_steps = config["n_steps"], # default is 2048
-            batch_size = 64, # default is 64
-            n_epochs = config["n_epochs"], # default is 10
-            gamma = config["gamma"], # default is 0.99
-            gae_lambda = config["gae_lambda"], # default is 0.95
-            clip_range = config["clip_range"], # default is 0.2
-            clip_range_vf = None, # default is None
-            normalize_advantage = True, # default is True
-            ent_coef = config["ent_coef"], # default is ent_coef
-            vf_coef = 0.5, # default is vf_coef
-            max_grad_norm = config["max_grad_norm"], # default is max_grad_norm
-            target_kl = None, # default is None
-            tensorboard_log = None, # default is None
-            #create_eval_env = False, # default is False
-            policy_kwargs = None, # default is None
-            verbose = 1, # default is 0
-            seed = None, # default is None
-            device = "auto", # default is "auto"
-            _init_setup_model = True # default is True
-    )
-
-
-    # Set up an evaluation callback
-    eval_callback = MaskableEvalCallback(
-        eval_env,
-        best_model_save_path="./models/sweeps/",
-        log_path="./logs/sweeps/",
-        eval_freq=500,
-        deterministic=True,
-        render=False
-    )
-
-    # Train the PPo agent
-    model.learn(total_timesteps=config["total_timesteps"], callback=eval_callback)
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"Single environment training took {elapsed_time:.2f} seconds.")
-
-    # Evaluate the trained agent
-    mean_reward, std_reward, mean_makespan, std_makespan = evaluate_policy_with_makespan(model, eval_env, n_eval_episodes=10, deterministic=True)
-
-    return mean_reward, mean_makespan
-
-def train_agent_multi_env(config, n_envs, input_file):
-    # Issues with MaskablePPO and SubprocVecEnv: 
-    # https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/issues/49
-    start_time = time.time()
+    assert n_envs >= 1
 
     # Create a gym environment
     env_name = "jss-v1"
@@ -139,20 +67,31 @@ def train_agent_multi_env(config, n_envs, input_file):
     n_envs = n_envs
     rank = 1
 
-    #seeds = np.random.randint(0, 2**32 - 1, n_envs)
-    seed = np.random.randint(0, 2**32 - 1, 1)
+    seeds = np.random.randint(0, 2**32 - 1, n_envs)
     seed_eval = np.random.randint(0, 2**32 - 1, n_envs)
 
-    #envs = [make_env(env_id=env_name, rank=rank, seed=int(seed), instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)() for seed in seeds]
-    #env = VecEnv(envs)
-
-    #env = make_vec_env(make_env(env_name, rank=rank, seed=seed, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)(), n_envs, vec_env_cls=DummyVecEnv)
-    env = make_vec_env("jss-v1", n_envs, vec_env_cls=DummyVecEnv)
-    
+    if n_envs == 1:
+        env = make_env(
+            env_name, 
+            rank=rank, 
+            seed=seeds, 
+            instance_name=instance_name, 
+            permutation_mode=None, 
+            permutation_matrix = None, 
+            monitor_log_path="./logs/monitor_logs/sweeps/test_")()
+        #env = DummyVecEnv([lambda: env])
+    elif n_envs > 1:
+        # Issues with MaskablePPO and SubprocVecEnv: 
+        # https://github.com/Stable-Baselines-Team/stable-baselines3-contrib/issues/49
+        env = make_vec_env(
+            make_env(env_name, rank=rank, seed=seed_eval, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)
+            , n_envs, vec_env_cls=SubprocVecEnv)
 
     # Set up evaluation environment
-    eval_env = make_env(env_name, rank=rank, seed=seed_eval, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)
+    eval_env = make_env(env_name, rank=rank, seed=seed_eval, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)()
     eval_env = DummyVecEnv([lambda: eval_env])
+
+    policy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[dict(pi=[319, 319], vf=[319, 319])])
 
     # configure the PPO agent
     model = MaskablePPO(
@@ -160,7 +99,7 @@ def train_agent_multi_env(config, n_envs, input_file):
             env=env, 
             learning_rate = config["learning_rate"], # default is 3e-4
             n_steps = config["n_steps"], # default is 2048
-            batch_size = 64, # default is 64
+            batch_size = config["batch_size"], # default is 64
             n_epochs = config["n_epochs"], # default is 10
             gamma = config["gamma"], # default is 0.99
             gae_lambda = config["gae_lambda"], # default is 0.95
@@ -168,12 +107,12 @@ def train_agent_multi_env(config, n_envs, input_file):
             clip_range_vf = None, # default is None
             normalize_advantage = True, # default is True
             ent_coef = config["ent_coef"], # default is ent_coef
-            vf_coef = 0.5, # default is vf_coef
+            vf_coef = config["vf_coef"], # default is 0.5
             max_grad_norm = config["max_grad_norm"], # default is max_grad_norm
             target_kl = None, # default is None
             tensorboard_log = None, # default is None
             #create_eval_env = False, # default is False
-            policy_kwargs = None, # default is None
+            policy_kwargs = policy_kwargs, # default is None
             verbose = 1, # default is 0
             seed = None, # default is None
             device = "auto", # default is "auto"
@@ -190,34 +129,93 @@ def train_agent_multi_env(config, n_envs, input_file):
         render=False
     )
 
-    # Train the PPo agent
-    model.learn(total_timesteps=config["total_timesteps"], callback=eval_callback)
+    stopTrainingOnMaxEpisodes_callback = StopTrainingOnMaxEpisodes(max_episodes = max_episodes, verbose=1)
 
+    callbacks = CallbackList([stopTrainingOnMaxEpisodes_callback, eval_callback])
+
+    # Train the PPO agent
+    model.learn(total_timesteps=np.inf, callback=callbacks)
+
+    # Get the episode data
+    episode_rewards = env.get_episode_rewards()
+    episode_lengths = env.get_episode_lengths()
+    episode_times = env.get_episode_times()
+    episode_makespans = env.get_episode_makespans()
+
+    episode_rewards_min = np.min(episode_rewards)
+    episode_rewards_max = np.max(episode_rewards)
+    episode_rewards_mean = np.mean(episode_rewards)
+
+    episode_lengths_min = np.min(episode_lengths)
+    episode_lengths_max = np.max(episode_lengths)
+    episode_lengths_mean = np.mean(episode_rewards)
+
+    episode_times_min = np.min(episode_times)
+    episode_times_max = np.max(episode_times)
+    episode_times_mean = np.mean(episode_times)
+
+    episode_makespans_min = np.min(episode_makespans)
+    episode_makespans_max = np.max(episode_makespans)
+    episode_makespans_mean = np.mean(episode_makespans)
+
+    # Log the episode data
+    wandb.log({
+        "eval/episode_rewards": episode_rewards,
+        "eval/episode_rewards_min": episode_rewards_min,
+        "eval/episode_rewards_max": episode_rewards_max,
+        "eval/episode_rewards_mean": episode_rewards_mean
+    })
+
+    wandb.log({
+        "eval/episode_lengths": episode_lengths,
+        "eval/episode_lengths_min": episode_lengths_min,
+        "eval/episode_lengths_max": episode_lengths_max,
+        "eval/episode_lengths_mean": episode_lengths_mean
+    })
+
+    wandb.log({
+        "eval/episode_times": episode_times,
+        "eval/episode_times_min": episode_times_min,
+        "eval/episode_times_max": episode_times_max,
+        "eval/episode_times_mean": episode_times_mean
+    })
+
+    wandb.log({
+        "eval/episode_makespans": episode_makespans,
+        "eval/episode_makespans_min": episode_makespans_min,
+        "eval/episode_makespans_max": episode_makespans_max,
+        "eval/episode_makespans_mean": episode_makespans_mean
+    })
+
+    # Calculate elapsed time
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print(f"Multi-environment training took {elapsed_time:.2f} seconds.")
+
+    if n_envs == 1:
+        print(f"Single environment training took {elapsed_time:.2f} seconds.")
+    elif n_envs > 1:
+        print(f"Multi-environment training took {elapsed_time:.2f} seconds.")
 
     # Evaluate the trained agent
-    mean_reward, std_reward, mean_makespan, std_makespan = evaluate_policy_with_makespan(model, eval_env, n_eval_episodes=10, deterministic=True)
+    metric_dict = evaluate_policy_with_makespan(model, eval_env, n_eval_episodes=10, deterministic=True)
 
-    return mean_reward, mean_makespan
+    return metric_dict["mean_reward"], metric_dict["mean_makespan"]
 
-
-
-def run_sweep(tuning_method="bayes", n_runs=20, n_workers=1, input_file="./data/instances/taillard/ta41.txt", project_name="maskable_ppo_hyperparameter_tuning"):
+def run_sweep(tuning_method="bayes", n_runs=20, n_workers=1, max_episodes=30, input_file="./data/instances/taillard/ta41.txt", project_name="maskable_ppo_hyperparameter_tuning"):
 
     def sweep_agent_single():
         with wandb.init() as run:
             sweep_config = run.config
-            mean_reward, mean_makespan = train_agent_single_env(sweep_config, input_file=input_file)
-            wandb.log({"eval/mean_reward": mean_reward, "eval/mean_makespan": mean_makespan})
+            
+            mean_reward, mean_makespan = train_agent(sweep_config, 1, input_file, max_episodes=max_episodes)
+            # eval/mean_reward and eval/mean_makespan seem to give the mean over all eval env episodes
+            #wandb.log({"eval/mean_reward": mean_reward, "eval/mean_makespan": mean_makespan})
 
     def sweep_agent_multi():
         with wandb.init() as run:
             sweep_config = run.config
-            mean_reward, mean_makespan = train_agent_multi_env(sweep_config, n_envs=n_workers, input_file=input_file)
-            wandb.log({"eval/mean_reward": mean_reward, "eval/mean_makespan": mean_makespan})
-
+            mean_reward, mean_makespan = train_agent(sweep_config, n_workers, input_file, max_episodes=max_episodes)
+            #wandb.log({"eval/mean_reward": mean_reward, "eval/mean_makespan": mean_makespan})
 
     sweep_config = {
         "name": f"maskable_ppo_hyperparameter_tuning_{tuning_method}_{n_runs}-runs_{n_workers}-workers",
@@ -225,17 +223,21 @@ def run_sweep(tuning_method="bayes", n_runs=20, n_workers=1, input_file="./data/
         "metric": {"goal": "maximize", "name": "eval/mean_reward"},
         "description": f"input_file: {input_file}, n_runs: {n_runs}, n_workers: {n_workers}",
         "parameters": {
+            "batch_size": {"min": 64, "max": 512, "distribution": "int_uniform"},
             "n_steps": {"min": 64, "max": 2048, "distribution": "int_uniform"},
             "gamma": {"min": 0.9, "max": 0.999, "distribution": "uniform"},
             "learning_rate": {"min": 1e-5, "max": 1e-2, "distribution": "uniform"},
-            "ent_coef": {"min": 1e-6, "max": 1e-2, "distribution": "uniform"},
-            "clip_range": {"min": 0.1, "max": 0.3, "distribution": "uniform"},
-            "n_epochs": {"min": 1, "max": 10, "distribution": "int_uniform"},
+            "ent_coef": {"min": 0.0, "max": 0.01, "distribution": "uniform"},
+            "vf_coef": {"min": 0.5, "max": 1.0, "distribution": "uniform"},
+            "clip_range": {"min": 0.1, "max": 0.6, "distribution": "uniform"},
+            "n_epochs": {"min": 3, "max": 30, "distribution": "int_uniform"},
             "gae_lambda": {"min": 0.9, "max": 1.0, "distribution": "uniform"},
             "max_grad_norm": {"min": 0.1, "max": 10, "distribution": "uniform"},
-            "total_timesteps": {"min": 10_000, "max": 100_000, "distribution": "int_uniform"},
+            #"total_timesteps": {"min": 10_000, "max": 100_000, "distribution": "int_uniform"},
+            #"total_episodes": {"min":30, "max": 30, "distribution": "int_uniform"}
         },
     }
+
 
     if tuning_method == "bayes":
         if n_workers == 1:
@@ -250,7 +252,8 @@ def run_sweep(tuning_method="bayes", n_runs=20, n_workers=1, input_file="./data/
             single_sweep_id = wandb.sweep(sweep_config, project=project_name)
             wandb.agent(single_sweep_id, function=sweep_agent_single, count=n_runs)
         elif n_workers > 1:
-            raise NotImplementedError("Multiple envs is not supported yet.")
+            multi_sweep_id = wandb.sweep(sweep_config, project=project_name)
+            wandb.agent(multi_sweep_id, function=sweep_agent_multi, count=n_runs)
 
     elif tuning_method == "grid":
         if n_workers == 1:

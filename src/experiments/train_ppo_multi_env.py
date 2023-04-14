@@ -91,7 +91,10 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
 
     # Set up environment
     #env = SubprocVecEnv([make_env(env_id=env_name, rank=i, seed=seed, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)() for i in range(n_envs)])
-    env = make_vec_env(make_env(env_id=env_name, rank=0, seed=seed, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None), n_envs=n_envs, vec_env_cls=SubprocVecEnv)
+    env = make_vec_env(
+        make_env(env_id=env_name, rank=0, seed=seed, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None), 
+        n_envs=n_envs, 
+        vec_env_cls=SubprocVecEnv)
 
     print(f"Environment: {env} of type {type(env)}")
 
@@ -103,8 +106,8 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
 
     print(f"Masking supported on eval_env: {is_masking_supported(eval_env)}")
 
-    #policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=[dict(pi=[256, 256, 128], vf=[256, 256, 128])])
-    policy_kwargs = None
+    policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=[dict(pi=[256, 256, 128], vf=[256, 256, 128])])
+    #policy_kwargs = None
 
     # configure the PPO agent
     model = MaskablePPO(
@@ -112,7 +115,7 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
             env=env, 
             learning_rate = hyperparam_config["learning_rate"], # default is 3e-4
             n_steps = hyperparam_config["n_steps"], # default is 2048
-            batch_size = 64, # default is 64
+            batch_size = hyperparam_config["batch_size"], # default is 64
             n_epochs = hyperparam_config["n_epochs"], # default is 10
             gamma = hyperparam_config["gamma"], # default is 0.99
             gae_lambda = hyperparam_config["gae_lambda"], # default is 0.95
@@ -120,7 +123,7 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
             clip_range_vf = None, # default is None
             normalize_advantage = True, # default is True
             ent_coef = hyperparam_config["ent_coef"], # default is ent_coef
-            vf_coef = 0.5, # default is 0.5
+            vf_coef = hyperparam_config["vf_coef"], # default is 0.5
             max_grad_norm = hyperparam_config["max_grad_norm"], # default is max_grad_norm
             target_kl = None, # default is None
             tensorboard_log = None, # default is None
@@ -163,12 +166,12 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
     print(f"Multi-environment training took {elapsed_time:.2f} seconds.")
 
     # Evaluate the trained agent
-    mean_reward, std_reward, mean_makespan, std_makespan = evaluate_policy_with_makespan(model, eval_env, n_eval_episodes=10, deterministic=True)
+    metric_dict = evaluate_policy_with_makespan(model, eval_env, n_eval_episodes=10, deterministic=True)
 
     if config.USE_WANDB:
         wandb.save('./models/multi-ppo/best_model.zip')
 
-    return mean_reward, mean_makespan
+    return metric_dict["mean_reward"], metric_dict["mean_makespan"]
 
 
 if __name__ == "__main__":
