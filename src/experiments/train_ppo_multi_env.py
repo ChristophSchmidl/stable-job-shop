@@ -16,6 +16,7 @@ from src.utils import evaluate_policy_with_makespan
 from src.wrappers import JobShopMonitor
 from src.callbacks.TimeLimitCallback import TimeLimitCallback
 from src.callbacks.WandbLoggingCallback import WandbLoggingCallback
+from src.callbacks.SaveBestModelCallback import SaveBestModelCallback
 from stable_baselines3.common.callbacks import CallbackList
 from src import config
 
@@ -82,7 +83,6 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
 
     # Create a gym environment
     env_name = "jss-v1"
-    instance_name = input_file
     n_envs = n_envs
 
     #seeds = np.random.randint(0, 2**32 - 1, n_envs)
@@ -92,7 +92,7 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
     # Set up environment
     #env = SubprocVecEnv([make_env(env_id=env_name, rank=i, seed=seed, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)() for i in range(n_envs)])
     env = make_vec_env(
-        make_env(env_id=env_name, rank=0, seed=seed, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None), 
+        make_env(env_id=env_name, rank=0, seed=seed, instance_name=input_file, permutation_mode=None, permutation_matrix = None, monitor_log_path=None), 
         n_envs=n_envs, 
         vec_env_cls=SubprocVecEnv)
 
@@ -101,10 +101,31 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
     print(f"Masking supported on env: {is_masking_supported(env)}")
     
     # Set up evaluation environment
-    eval_env = make_env(env_name, rank=0, seed=seed_eval, instance_name=instance_name, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)()
+    eval_env = make_env(env_name, rank=0, seed=seed_eval, instance_name=input_file, permutation_mode=None, permutation_matrix = None, monitor_log_path=None)()
     eval_env = DummyVecEnv([lambda: eval_env])
 
     print(f"Masking supported on eval_env: {is_masking_supported(eval_env)}")
+
+    callbacks = []
+
+    # Set up timelimit callback
+    if time_limit_in_seconds != 0:
+        time_limit_callback = TimeLimitCallback(time_limit_in_seconds)
+        callbacks.append(time_limit_callback)
+
+    # Save best performing model on eval_env
+    best_model_save_path = f"./models/multi-ppo-tuned/{instance_name.lower()}/"
+
+    save_best_model_callback = SaveBestModelCallback(
+        check_freq=1, # check at every episode
+        eval_env=eval_env,
+        best_model_save_path=best_model_save_path,
+        use_episodes=True,
+        n_eval_episodes=1, # run evaluation one time on eval_env
+        deterministic=True,
+        verbose=1)
+    
+    callbacks.append(save_best_model_callback)
 
     policy_kwargs = dict(activation_fn=th.nn.ReLU, net_arch=[dict(pi=[256, 256, 128], vf=[256, 256, 128])])
     #policy_kwargs = None
@@ -136,9 +157,12 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
     )
 
     if config.USE_WANDB:
-        wandb_logging_callback = WandbLoggingCallback(eval_env, n_eval_episodes=5)
+        # evaluate the trained model every 5 episodes on a separate eval_env
+        wandb_logging_callback = WandbLoggingCallback(check_freq=5, use_episodes=True, eval_env=eval_env, n_eval_episodes=1, deterministic=True, verbose=1)
+        callbacks.append(wandb_logging_callback)
 
     # Set up an evaluation callback
+    '''
     eval_callback = MaskableEvalCallback(
         eval_env,
         best_model_save_path="./models/multi-ppo/",
@@ -148,28 +172,29 @@ def train_agent_multi_env(hyperparam_config, n_envs, input_file, time_limit_in_s
         render=False,
         verbose=1
     )
+    '''
 
-    # Set up timelimit callback
-    time_limit_callback = TimeLimitCallback(time_limit_in_seconds)
-
-    if config.USE_WANDB:
-        callbacks = CallbackList([wandb_logging_callback, eval_callback, time_limit_callback])
-    else:
-        callbacks = CallbackList([eval_callback, time_limit_callback])
+    callback_list = CallbackList(callbacks)
     
 
     # Train the PPO agent
-    model.learn(total_timesteps=np.inf, callback=callbacks)
+    model.learn(total_timesteps=np.inf, callback=callback_list)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Multi-environment training took {elapsed_time:.2f} seconds.")
 
     # Evaluate the trained agent
-    metric_dict = evaluate_policy_with_makespan(model, eval_env, n_eval_episodes=10, deterministic=True)
+    # Load the saved model and evaluate
+    best_model_path = os.path.join(best_model_save_path, "best_model.zip")
+    best_model = MaskablePPO.load(best_model_path, eval_env)
+
+    metric_dict = evaluate_policy_with_makespan(best_model, eval_env, n_eval_episodes=10, deterministic=True)
 
     if config.USE_WANDB:
-        wandb.save('./models/multi-ppo/best_model.zip')
+        wandb.save(best_model_path)
+
+    wandb.finish()
 
     return metric_dict["mean_reward"], metric_dict["mean_makespan"]
 

@@ -75,8 +75,8 @@ class CustomParser():
             help='Reinforcement-learning help.')
         self.parser_rl_command.add_argument('--episodes', type=int, default=100, 
             help='Number of episodes to train in reinforcement-learning mode. Default is 100.')
-        self.parser_rl_command.add_argument('--input_file', type=str.lower, default='./data/instances/taillard/ta41.txt',
-                    help='The input_file represents the problem instance. Default is ./data/instances/taillard/ta41.txt')
+        self.parser_rl_command.add_argument('--input_files', type=str.lower, metavar='FILE', nargs='+', 
+            default='./data/instances/taillard/ta41.txt', help='Input files to process')
         self.parser_rl_command.add_argument('--time_limit', type=int, default=60, 
             help='Time limit in seconds. Default is 60.')
         self.parser_rl_command.add_argument('--config_type', type=int, 
@@ -225,7 +225,8 @@ if __name__ == '__main__':
         time_limit_in_seconds = args.time_limit
         n_workers = args.n_workers
         episodes = args.episodes
-        input_file = args.input_file
+
+        input_files = args.input_files
 
         config = None
         if config_type == 1:
@@ -237,8 +238,10 @@ if __name__ == '__main__':
         elif config_type == 4:
             config = hyperparam_config_third
 
-        mean_reward, mean_makespan = train_agent_multi_env(hyperparam_config=config, n_envs=n_workers, input_file=input_file, time_limit_in_seconds=time_limit_in_seconds)
-        print(f"Finished training with mean_reward of {mean_reward} and mean_makespan of {mean_makespan}.")
+        for input_file in input_files:
+            print(f"Start training model for instance: {input_file}")
+            mean_reward, mean_makespan = train_agent_multi_env(hyperparam_config=config, n_envs=n_workers, input_file=input_file, time_limit_in_seconds=time_limit_in_seconds)
+            print(f"Finished training with mean_reward of {mean_reward} and mean_makespan of {mean_makespan}.")
 
     if args.command == "rl-tune":
         
