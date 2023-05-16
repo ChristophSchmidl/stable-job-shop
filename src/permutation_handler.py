@@ -126,7 +126,7 @@ class PermutationHandler:
               However, we need to increase it by one to account for the no-op operation
         Returns the permuted action index based on the permutation indices
         '''
-        assert isinstance(action, (int, integer)), "Action must be an integer"
+        assert isinstance(action, int) or np.issubdtype(type(action), np.integer), "Action must be an integer"
 
         if len(perm_indices) == 1:
             perm_indices = perm_indices[0]
@@ -150,8 +150,9 @@ class PermutationHandler:
               However, we need to increase it by one to account for the no-op operation
         Returns the permuted action index based on the permutation indices
         '''
-        action = action[0]
-        assert np.issubdtype(action, integer), "Action must be an integer"
+        #print(f"Action {action} is of type {type(action)}")
+        #action = action[0]
+        assert isinstance(action, int) or np.issubdtype(type(action), np.integer), "Action must be an integer"
 
         action_space = len(perm_indices)
 

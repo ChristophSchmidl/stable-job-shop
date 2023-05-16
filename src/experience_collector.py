@@ -2,7 +2,7 @@ from typing import Dict, Any
 import numpy as np
 from stable_baselines3.common.vec_env import DummyVecEnv
 from src.envs.JobShopEnv.envs.JssEnv import JssEnv
-from src.old_utils import make_env, evaluate_policy_with_makespan, evaluate_policy_with_makespan_single_env
+from src.utils import make_env, evaluate_policy_with_makespan, evaluate_policy_with_makespan_single_env
 from src.models import MaskablePPOPermutationHandler
 
 

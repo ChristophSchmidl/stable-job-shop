@@ -125,7 +125,7 @@ def MWKR_worker(instance_name = "taillard/ta41.txt", seed=1337):
     See: reshaped[:, 3] in the code below. # Give me the left-over time of all jobs
     '''
     print(f"Creating environment...\n")
-    env = gym.make('jss-v1', env_config={'instance_path': f"./data/instances/{instance_name}", 'permutation_mode': None})
+    env = gym.make('jss-v1', env_config={'instance_path': instance_name, 'permutation_mode': None})
     
     env.seed(seed)
     random.seed(seed)
@@ -165,7 +165,7 @@ def LWKR_worker(instance_name = "taillard/ta41.txt", seed=1337):
     See: reshaped[:, 3] in the code below. # Give me the left-over time of all jobs
     '''
     print(f"Creating environment...\n")
-    env = gym.make('jss-v1', env_config={'instance_path': f"./data/instances/{instance_name}", 'permutation_mode': None})
+    env = gym.make('jss-v1', env_config={'instance_path': instance_name, 'permutation_mode': None})
     
     env.seed(seed)
     random.seed(seed)
@@ -206,7 +206,7 @@ def RANDOM_worker(instance_name = "taillard/ta41.txt", seed=1337):
     See: reshaped[:, 3] in the code below. # Give me the left-over time of all jobs
     '''
     print(f"Creating environment...\n")
-    env = gym.make('jss-v1', env_config={'instance_path': f"./data/instances/{instance_name}", 'permutation_mode': None})
+    env = gym.make('jss-v1', env_config={'instance_path': instance_name, 'permutation_mode': None})
     
     env.seed(seed)
     random.seed(seed)

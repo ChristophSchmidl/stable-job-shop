@@ -8,9 +8,10 @@ from src.logger import get_logger
 from src.utils import print_device_info, get_device, make_env
 import src.agents as Agents
 from src.cp.cp_solver import CPJobShopSolver
-from src.experiments.dispatching_rules_wandb import execute_fifo_worker, execute_mwkr_worker
+from src.experiments.dispatching_rules_wandb import execute_fifo_worker, execute_mwkr_worker, execute_random_worker
 from src.tuning.hyperparameter_search import run_sweep
 from src.experiments.train_ppo_multi_env import train_agent_multi_env
+from src.visualiztion.baselines import get_baseline_rl_makespans, get_baseline_rl_ta41_applied_to_others_makespans, evaluate_8_hour_ta41_rl, evaluate_rl_model
 
 
 class CustomParser():
@@ -34,6 +35,8 @@ class CustomParser():
         self._add_constraint_programming_parser()
         self._add_dispatching_rules_parser()
         self._add_reinforcement_tuning_parser()
+        self._add_visualization_parser()
+        self._add_evaluation_parser()
 
         ######################################
 
@@ -46,7 +49,7 @@ class CustomParser():
         self.parser_dr_command.add_argument('--input_files', metavar='FILE', nargs='+', 
             help='Input files to process')
         self.parser_dr_command.add_argument('--dispatching_rule', type=str.lower, 
-            action="store", choices=["fifo, mwkr, all"], default="all", 
+            action="store", choices=["fifo, mwkr, random, all"], default="all", 
             help='Which dispatching-rule to choose.')
         
 
@@ -114,6 +117,37 @@ class CustomParser():
         self.parser_cp_command.add_argument('--solution_type', type=str.lower, 
             action="store", choices=["feasible, optimal, all"], default="optimal", 
             help='Solution type that the cp solver should return Default it optimal.')
+        
+    def _add_visualization_parser(self):
+        # Add visualization functionality
+        self.parser_visualize_command = self.subparsers.add_parser('visualize', 
+            help='Visualization help.')
+        self.parser_visualize_command.add_argument('--task', type=str.lower, 
+            action="store", choices=["baseline_comparison, baseline_comparison_generalization"], default="baseline_comparison", 
+            help='A task represents the visualization to execute.')
+        self.parser_visualize_command.add_argument('--file_name', type=str.lower, default='plot.png',
+                    help='Filename of the visualization/plot. Default is plot.png')
+        self.parser_visualize_command.add_argument('--save_path', type=str.lower, default='./plots',
+                    help='Path of the folder where to store --filename. Default is ./plots')
+        
+    def _add_evaluation_parser(self):
+        # Add evaluation functionality
+        self.parser_evaluate_command = self.subparsers.add_parser('evaluate', 
+            help='Evaluation help.')
+        self.parser_evaluate_command.add_argument('--model_type', type=str.lower, 
+            action="store", choices=["rl", "supervised", "rl-sensitivity", "rl-generalization"], default="rl", 
+            help='Type of model to evaluate: Reinforcement learning or supervised learning. Default is rl.')
+        self.parser_evaluate_command.add_argument('--model_path', type=str.lower, default="./models/trained_tuned_30_mins/ta41/best_model.zip",
+                    help='Path to model that you want to evaluate. Default is ./models/trained_tuned_30_mins/ta41/best_model.zip')
+        self.parser_evaluate_command.add_argument('--instance_paths', metavar='FILE', nargs='+', default=["./data/instances/taillard/ta41.txt"],
+            help='Paths to scheduling instances for evaluation. Default is ./data/instances/taillard/ta41.txt')
+        
+        transpose_choices = [f"transpose={x}" for x in range(0,16)]
+        self.parser_evaluate_command.add_argument('--permutation_mode', type=str.lower, 
+            action="store", choices=transpose_choices, default="transpose=0", 
+            help='Data file used for training. Default is transpose=0, i.e., using no permutation.')
+        
+        
 
 
 if __name__ == '__main__':
@@ -219,8 +253,6 @@ if __name__ == '__main__':
         }
 
 
-
-
         config_type = args.config_type
         time_limit_in_seconds = args.time_limit
         n_workers = args.n_workers
@@ -259,6 +291,118 @@ if __name__ == '__main__':
     if args.command == "dr":
         execute_fifo_worker(args.input_files)
         execute_mwkr_worker(args.input_files)
+        #execute_random_worker(args.input_files, n_runs=100)
+
+    if args.command == "visualize":
+        task_name = args.task
+        file_name = args.file_name
+        save_path = args.save_path
+
+        print(f"Task name: {task_name}")
+        print(f"File name: {file_name}")
+        print(f"Save path: {save_path}")
+
+        evaluate_8_hour_ta41_rl()
+        #get_baseline_rl_makespans()
+        #get_baseline_rl_ta41_applied_to_others_makespans()
+
+    if args.command == "evaluate":
+
+
+
+        '''
+                self.parser_evaluate_command.add_argument('--model_type', type=str.lower, 
+            action="store", choices=["rl, supervised"], default="rl", 
+            help='Type of model to evaluate: Reinforcement learning or supervised learning. Default is rl.')
+        self.parser_evaluate_command.add_argument('--model_path', type=str.lower, default="./models/trained_tuned_30_mins/ta41/best_model.zip",
+                    help='Path to model that you want to evaluate. Default is ./models/trained_tuned_30_mins/ta41/best_model.zip')
+        self.parser_evaluate_command.add_argument('--instance_paths', metavar='FILE', nargs='+', default=["./data/instances/taillard/ta41.txt"],
+            help='Paths to scheduling instances for evaluation. Default is ./data/instances/taillard/ta41.txt')
+        '''
+
+        model_type = args.model_type # --model_type, options=["rl, supervised"]
+        model_path = args.model_path # --model_path, default="./models/trained_tuned_30_mins/ta41/best_model.zip"
+        instance_paths = args.instance_paths # --instance_paths, default=["./data/instances/taillard/ta41.txt"]
+        permutation_mode = args.permutation_mode
+
+        if model_type == "rl-generalization":
+            policy_names = ["ta41", "ta42", "ta43", "ta44", "ta45", "ta46", "ta47", "ta48", "ta49", "ta50"]
+            instance_names = ["ta41", "ta42", "ta43", "ta44", "ta45", "ta46", "ta47", "ta48", "ta49", "ta50"]
+
+            makespans = []
+
+            # Iterate over each policy
+            for policy_name in policy_names:
+                print(f"Calculate makespans for policy {policy_name}")
+
+                policy_makespans = []
+
+                model_path = f"./models/trained_tuned_30_mins/{policy_name}/best_model.zip"
+
+                # Apply policy to each instance
+                for instance_name in instance_names:
+                    print(f"Instance: {instance_name}")
+                    instance_path = f"./data/instances/taillard/{instance_name}.txt"
+                
+                    mean_reward, mean_makespan, elapsed_time = evaluate_rl_model(model_path=model_path, eval_instance_path=instance_path, eval_permutation_mode=None, n_eval_episodes=1)
+                    policy_makespans.append({instance_name: mean_makespan})
+
+                makespans.append({policy_name: policy_makespans})
+            
+            print(makespans)
+
+    
+
+        if model_type == "rl-sensitivity":
+            permutation_modes = ["transpose=0", "transpose=3", "transpose=6", "transpose=9", "transpose=12", "transpose=15"]
+            instance_names = ["ta41", "ta42", "ta43", "ta44", "ta45", "ta46", "ta47", "ta48", "ta49", "ta50"]
+            n_eval_episodes = 100
+
+            makespans = []
+
+            for instance_name in instance_names:
+                print(f"Calculate makespans for instance {instance_name}...")
+
+                instance_makespans = []
+
+                instance_path = f"./data/instances/taillard/{instance_name}.txt"
+                model_path = f"./models/trained_tuned_30_mins/{instance_name}/best_model.zip"
+
+                for permutation_mode in permutation_modes:
+                    print(f"Permutation mode: {permutation_mode}")
+
+                    if permutation_mode == "transpose=0":
+                        permutation_mode = None
+                
+                    mean_reward, mean_makespan, elapsed_time = evaluate_rl_model(model_path=model_path, eval_instance_path=instance_path, eval_permutation_mode=permutation_mode, n_eval_episodes=100)
+                    instance_makespans.append({permutation_mode: mean_makespan})
+
+                makespans.append({instance_name: instance_makespans})
+            
+            print(makespans)
+
+
+
+
+
+
+        if model_type == "rl":
+            print(f"Model type: {model_type}")
+            print(f"Model path: {model_path}")
+            print(f"Instance paths: {instance_paths}")
+            print(f"Permutation mode: {permutation_mode}")
+
+            if permutation_mode == "transpose=0":
+                permutation_mode = None
+
+            for instance_path in instance_paths:
+                evaluate_rl_model(model_path=model_path, eval_instance_path=instance_path, eval_permutation_mode=permutation_mode)
+            
+        elif model_type == "supervised":
+            pass
+
+
+
     
             
 
