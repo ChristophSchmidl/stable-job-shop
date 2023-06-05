@@ -24,11 +24,19 @@ class CustomDataset():
         }
 
 class Ta41Dataset(Dataset):
+    '''
+        - No permutation: 30mins_tuned_policy/experiences_no-permutation_1000-episodes.npz
+        - 20%           : 30mins_tuned_policy/experiences_transpose-3_1000-episodes.npz
+        - 40%           : 30mins_tuned_policy/experiences_transpose-6_1000-episodes.npz
+        - 60%           : 30mins_tuned_policy/experiences_transpose-9_1000-episodes.npz
+        - 80%           : 30mins_tuned_policy/experiences_transpose-12_1000-episodes.npz
+        - 100%          : 30mins_tuned_policy/experiences_transpose-15_1000-episodes.npz
+    '''
 
     def __init__(self, file_name="experiences_no-permutation_1000-episodes.npz"):
         # data loading
-        self.data_dir = os.path.join(get_project_root(), "data/experiences")  
-        self.data = np.load(f"{self.data_dir}/experiences_transpose-8_1000-episodes.npz")
+        self.data_dir = os.path.join(get_project_root(), "data", "experiences")  
+        self.data = np.load(os.path.join(self.data_dir, file_name))
         self.x = torch.from_numpy(self.data["states"])
         self.y = torch.from_numpy(self.data["actions"])
         self.n_samples = self.x.shape[0] # number of samples in the dataset

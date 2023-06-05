@@ -24,10 +24,10 @@ class SimpleFFNetwork(nn.Module):
         # pytorch-whats-the-difference-between-define-layer-in-init-and-directly-us
 
         self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(input_dims, 128)
-        self.fc2 = nn.Linear(128, 64)
+        self.fc1 = nn.Linear(input_dims, 256)
+        self.fc2 = nn.Linear(256, 128)
         self.drop = nn.Dropout(dropout_value)
-        self.fc3 = nn.Linear(64, n_actions)
+        self.fc3 = nn.Linear(128, n_actions)
 
         '''
         self.base = nn.Sequential(
@@ -54,6 +54,7 @@ class SimpleFFNetwork(nn.Module):
         state = self.drop(state)
         state = self.fc2(state)
         state = F.relu(state)
+        state = self.drop(state)
         actions = self.fc3(state)
 
         return actions

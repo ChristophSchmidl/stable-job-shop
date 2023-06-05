@@ -21,7 +21,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # hyperparameters
 input_size = 30 * 7 # 210, 30 jobs with 7 features
-hidden_size = 100
 num_classes = 30+1 # 30 jobs + 1 for no-op (no operation)
 num_epochs = 120
 batch_size = 64

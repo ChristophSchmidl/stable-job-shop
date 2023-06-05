@@ -12,6 +12,7 @@ from src.experiments.dispatching_rules_wandb import execute_fifo_worker, execute
 from src.tuning.hyperparameter_search import run_sweep
 from src.experiments.train_ppo_multi_env import train_agent_multi_env
 from src.visualiztion.baselines import get_baseline_rl_makespans, get_baseline_rl_ta41_applied_to_others_makespans, evaluate_8_hour_ta41_rl, evaluate_rl_model
+from src.supervised_learning.train_model import train
 
 
 class CustomParser():
@@ -52,7 +53,6 @@ class CustomParser():
             action="store", choices=["fifo, mwkr, random, all"], default="all", 
             help='Which dispatching-rule to choose.')
         
-
     def _add_supervised_parser(self):
         # create the parser for the "supervised-learning" subcommand
         self.parser_sl_command = self.subparsers.add_parser('sl', 
@@ -286,7 +286,79 @@ if __name__ == '__main__':
         run_sweep(tuning_method=method, n_runs=n_runs, n_workers=n_workers, max_episodes=max_episodes, input_file=input_file, project_name="maskable_ppo_hyperparameter_tuning")
 
     if args.command == "sl":
-        pass
+
+        dropouts = [False, True]
+
+        data_sets = [
+            {"ta41": [
+                {   "name": "no_permutation",
+                    "path": "30mins_tuned_policy/ta41/experiences_no-permutation_1000-episodes.npz"},
+                {
+                    "name": "20_percent_permutation", 
+                    "path": "30mins_tuned_policy/ta41/experiences_transpose-3_1000-episodes.npz"},
+                {
+                    "name": "40_percent_permutation", 
+                    "path": "30mins_tuned_policy/ta41/experiences_transpose-6_1000-episodes.npz"},
+                {
+                    "name": "60_percent_permutation",
+                    "path": "30mins_tuned_policy/ta41/experiences_transpose-9_1000-episodes.npz"},
+                {
+                    "name": "80_percent_permutation", 
+                    "path": "30mins_tuned_policy/ta41/experiences_transpose-12_1000-episodes.npz"},
+                {
+                    "name": "100_percent_permutation", 
+                    "path": "30mins_tuned_policy/ta41/experiences_transpose-15_1000-episodes.npz"},
+            ]}
+        ]
+
+
+        
+        models = [
+            {"ta41": "models/trained_tuned_30_mins/ta41/best_model.zip"},
+            {"ta42": "models/trained_tuned_30_mins/ta42/best_model.zip"},
+            {"ta43": "models/trained_tuned_30_mins/ta43/best_model.zip"},
+            {"ta44": "models/trained_tuned_30_mins/ta44/best_model.zip"},
+            {"ta45": "models/trained_tuned_30_mins/ta45/best_model.zip"},
+            {"ta46": "models/trained_tuned_30_mins/ta46/best_model.zip"},
+            {"ta47": "models/trained_tuned_30_mins/ta47/best_model.zip"},
+            {"ta48": "models/trained_tuned_30_mins/ta48/best_model.zip"},
+            {"ta49": "models/trained_tuned_30_mins/ta49/best_model.zip"},
+            {"ta50": "models/trained_tuned_30_mins/ta50/best_model.zip"},
+        ]
+
+        '''
+
+        '''
+                  
+        '''
+        1. Go through every data set collected by ta41 policy
+            1a) Train architecture without dropout
+            1b) Train architecture with dropout
+        
+        -[ ] Set time limit to 30 mins
+        -[ ] Set proper save path for best performing model
+        -[ ] Track metrics using w&bs
+        -[ ] Upload best performing model to w&b
+        -[ ] Evaluate models on all datasets
+        '''
+
+
+        for data_set in data_sets:
+            # data_set is dict
+            for data_set_name, permutation_set in data_set.items():
+                for permutation_dict in permutation_set:
+                    for dropout in dropouts:
+                        permutation_name = permutation_dict['name']
+                        permutation_path = permutation_dict['path']
+
+                        print(f"Using data set {data_set_name} with {permutation_name} loaded from {permutation_path}")
+                        print(f"Dropout enabled: {dropout}")
+                        train(data_filename = permutation_path, instance_name = data_set_name, data_desc = permutation_name,
+                              use_dropout = dropout, lr = 0.001, num_classes = 30+1, input_size = 30*7, num_epochs = 1000000, time_limit = 60*30
+                              )
+
+
+
 
     if args.command == "dr":
         execute_fifo_worker(args.input_files)
