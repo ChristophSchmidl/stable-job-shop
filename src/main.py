@@ -290,105 +290,84 @@ if __name__ == '__main__':
         dropouts = [False, True]
 
         data_sets = [
-            {"ta42": [
+            {"ta47": [
                 {   "name": "no_permutation",
-                    "path": "30mins_tuned_policy/ta42/experiences_no-permutation_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta47/experiences_no-permutation_1000-episodes.npz"},
                 {
                     "name": "20_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta42/experiences_transpose-3_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta47/experiences_transpose-3_1000-episodes.npz"},
                 {
                     "name": "40_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta42/experiences_transpose-6_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta47/experiences_transpose-6_1000-episodes.npz"},
                 {
                     "name": "60_percent_permutation",
-                    "path": "30mins_tuned_policy/ta42/experiences_transpose-9_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta47/experiences_transpose-9_1000-episodes.npz"},
                 {
                     "name": "80_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta42/experiences_transpose-12_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta47/experiences_transpose-12_1000-episodes.npz"},
                 {
                     "name": "100_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta42/experiences_transpose-15_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta47/experiences_transpose-15_1000-episodes.npz"},
             ]},
-            {"ta43": [
+            {"ta48": [
                 {   "name": "no_permutation",
-                    "path": "30mins_tuned_policy/ta43/experiences_no-permutation_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta48/experiences_no-permutation_1000-episodes.npz"},
                 {
                     "name": "20_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta43/experiences_transpose-3_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta48/experiences_transpose-3_1000-episodes.npz"},
                 {
                     "name": "40_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta43/experiences_transpose-6_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta48/experiences_transpose-6_1000-episodes.npz"},
                 {
                     "name": "60_percent_permutation",
-                    "path": "30mins_tuned_policy/ta43/experiences_transpose-9_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta48/experiences_transpose-9_1000-episodes.npz"},
                 {
                     "name": "80_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta43/experiences_transpose-12_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta48/experiences_transpose-12_1000-episodes.npz"},
                 {
                     "name": "100_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta43/experiences_transpose-15_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta48/experiences_transpose-15_1000-episodes.npz"},
             ]},
-            {"ta44": [
+            {"ta49": [
                 {   "name": "no_permutation",
-                    "path": "30mins_tuned_policy/ta44/experiences_no-permutation_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta49/experiences_no-permutation_1000-episodes.npz"},
                 {
                     "name": "20_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta44/experiences_transpose-3_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta49/experiences_transpose-3_1000-episodes.npz"},
                 {
                     "name": "40_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta44/experiences_transpose-6_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta49/experiences_transpose-6_1000-episodes.npz"},
                 {
                     "name": "60_percent_permutation",
-                    "path": "30mins_tuned_policy/ta44/experiences_transpose-9_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta49/experiences_transpose-9_1000-episodes.npz"},
                 {
                     "name": "80_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta44/experiences_transpose-12_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta49/experiences_transpose-12_1000-episodes.npz"},
                 {
                     "name": "100_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta44/experiences_transpose-15_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta49/experiences_transpose-15_1000-episodes.npz"},
             ]},
-            {"ta45": [
+            {"ta50": [
                 {   "name": "no_permutation",
-                    "path": "30mins_tuned_policy/ta45/experiences_no-permutation_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta50/experiences_no-permutation_1000-episodes.npz"},
                 {
                     "name": "20_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta45/experiences_transpose-3_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta50/experiences_transpose-3_1000-episodes.npz"},
                 {
                     "name": "40_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta45/experiences_transpose-6_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta50/experiences_transpose-6_1000-episodes.npz"},
                 {
                     "name": "60_percent_permutation",
-                    "path": "30mins_tuned_policy/ta45/experiences_transpose-9_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta50/experiences_transpose-9_1000-episodes.npz"},
                 {
                     "name": "80_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta45/experiences_transpose-12_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta50/experiences_transpose-12_1000-episodes.npz"},
                 {
                     "name": "100_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta45/experiences_transpose-15_1000-episodes.npz"},
-            ]},
-            {"ta46": [
-                {   "name": "no_permutation",
-                    "path": "30mins_tuned_policy/ta46/experiences_no-permutation_1000-episodes.npz"},
-                {
-                    "name": "20_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta46/experiences_transpose-3_1000-episodes.npz"},
-                {
-                    "name": "40_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta46/experiences_transpose-6_1000-episodes.npz"},
-                {
-                    "name": "60_percent_permutation",
-                    "path": "30mins_tuned_policy/ta46/experiences_transpose-9_1000-episodes.npz"},
-                {
-                    "name": "80_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta46/experiences_transpose-12_1000-episodes.npz"},
-                {
-                    "name": "100_percent_permutation", 
-                    "path": "30mins_tuned_policy/ta46/experiences_transpose-15_1000-episodes.npz"},
+                    "path": "30mins_tuned_policy/ta50/experiences_transpose-15_1000-episodes.npz"},
             ]}
         ]
 
-
-        
         models = [
             {"ta41": "models/trained_tuned_30_mins/ta41/best_model.zip"},
             {"ta42": "models/trained_tuned_30_mins/ta42/best_model.zip"},
