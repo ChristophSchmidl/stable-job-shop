@@ -10,7 +10,7 @@ A three-step-approach that combines RL and Supervised Learning techniques. The i
 ## Requirements
 
 - Stable-baselines3: https://github.com/DLR-RM/stable-baselines3
-- OpenAI gym: 
-- OpenAI gym box2d:
-- Swig (requirement to install box2d?)
+- OpenAI gym
+- OpenAI gym box2d
+- Swig (requirement to install box2d)
 - An OpenAi Gym environment for the Job Shop Scheduling problem: https://github.com/prosysscience/JSSEnv 
